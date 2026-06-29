@@ -1,0 +1,1026 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AIR SPACE AI｜高評分改款延伸</title>
+  <style>
+    :root {
+      --nav:#221814; --nav2:#46381f; --brand:#625d58; --accent:#968871; --ink:#221814; --muted:#6f6a62;
+      --line:#d0cfc6; --bg:#f4f1ea; --panel:#fffdf8; --hot:#ece4d4; --hotText:#46381f;
+      --slow:#e0dfdb; --slowText:#625d58; --good:#5f6b50; --warn:#968871; --bad:#46381f;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Microsoft JhengHei",system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:var(--bg); }
+    .app { display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
+    aside { background:linear-gradient(180deg,#221814,#46381f); color:#fff; padding:22px 16px; }
+    .brand { display:flex; gap:12px; align-items:center; margin-bottom:30px; }
+    .logo { width:48px; height:48px; border:1px solid #968871; border-radius:4px; display:grid; place-items:center; font-weight:800; }
+    .brand b { display:block; font-size:18px; }
+    .brand span { color:#d0cfc6; font-size:13px; }
+    nav a { display:block; color:#fff; text-decoration:none; padding:13px 14px; border-radius:4px; margin:5px 0; }
+    nav a.active { background:rgba(244,241,234,.14); }
+    .sideBlock { border-top:1px solid #625d58; margin-top:28px; padding-top:18px; display:grid; gap:13px; }
+    .sideLine { display:flex; justify-content:space-between; color:#e0dfdb; }
+    .sideLine b { color:#fff; }
+    main { padding:18px 28px 40px; overflow:auto; }
+    .sectionTitle { display:flex; justify-content:space-between; align-items:end; gap:18px; margin-bottom:14px; }
+    h1,h2,h3 { margin:0; letter-spacing:0; }
+    h1 { font-size:24px; }
+    h2 { font-size:24px; margin-top:30px; }
+    .branchBar { display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 16px; }
+    .branch { border:1px solid var(--line); background:#fffdf8; color:var(--ink); min-width:150px; padding:12px 22px; border-radius:4px; text-align:center; font-weight:800; cursor:pointer; }
+    .branch.active { background:var(--nav2); color:#fff; border-color:var(--nav2); }
+    .channelBar { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 16px; }
+    .channelBtn { min-width:96px; padding:9px 14px; background:#fffdf8; color:var(--ink); border:1px solid var(--line); }
+    .channelBtn.active { background:#968871; color:#fff; border-color:#968871; }
+    .controls { display:flex; gap:10px; align-items:center; }
+    select,input,textarea,button { font:inherit; border:1px solid var(--line); border-radius:4px; background:#fffdf8; padding:10px 12px; }
+    button { background:var(--nav2); color:#fff; border-color:var(--nav2); cursor:pointer; font-weight:700; }
+    button.secondary { background:#fff; color:var(--brand); }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .factorBox,.catCard,.uploadPanel,.resultPanel { background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:16px; }
+    .factorBox h3 { font-size:16px; margin-bottom:12px; }
+    .chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .chip { display:inline-flex; gap:5px; align-items:center; border-radius:4px; padding:7px 9px; font-size:13px; background:#e0dfdb; color:#46381f; }
+    .chip.hot { background:var(--hot); color:var(--hotText); }
+    .chip.slow { background:var(--slow); color:var(--slowText); }
+    .catGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+    .catHead { display:flex; justify-content:space-between; align-items:start; gap:12px; margin-bottom:10px; }
+    .catHead h3 { font-size:20px; }
+    .small { color:var(--muted); font-size:13px; line-height:1.5; }
+    .labelCols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .subhead { font-weight:800; font-size:13px; margin:8px 0; }
+    .uploadWorkspace { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:18px; align-items:start; }
+    .uploadPanel { border-color:#c8c2b4; background:linear-gradient(135deg,#fffdf8,#ece4d4); box-shadow:0 14px 34px rgba(70,56,31,.10); }
+    .uploadPanel { grid-column:1 / -1; }
+    .uploadTools { display:grid; grid-template-columns:minmax(320px,460px) 1fr 180px; gap:16px; align-items:end; }
+    .drop { border:1px dashed #968871; border-radius:4px; padding:16px; background:#f4f1ea; margin:0; }
+    .drop strong { display:block; margin-bottom:9px; }
+    textarea { width:100%; min-height:120px; resize:vertical; margin:8px 0; }
+    .apiRow { display:grid; grid-template-columns:1fr auto; gap:8px; margin:8px 0; }
+    .status { color:var(--muted); font-size:13px; margin-top:8px; min-height:20px; }
+    .resultPanel { min-height:300px; background:#f4f1ea; }
+    .scoreGuide { grid-column:2; grid-row:2 / span 2; position:sticky; top:16px; border:1px solid #c8c2b4; border-radius:4px; padding:16px; background:#fffdf8; box-shadow:0 14px 34px rgba(70,56,31,.10); }
+    .scoreGuide h3 { font-size:18px; margin-bottom:10px; }
+    .scoreGuide ul { margin:8px 0 0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.65; }
+    .scoreFormula { display:grid; gap:7px; margin-top:10px; }
+    .scoreFormula div { display:flex; justify-content:space-between; gap:8px; border-bottom:1px solid #e0dfdb; padding-bottom:6px; font-size:13px; }
+    .cards { display:grid; gap:12px; }
+    .itemCard { display:grid; grid-template-columns:110px 1fr; gap:12px; border:1px solid var(--line); border-radius:4px; padding:10px; background:#fffdf8; }
+    .thumb { width:110px; height:140px; object-fit:cover; border-radius:7px; background:#eef2f6; }
+    .itemTop { display:flex; justify-content:space-between; gap:8px; align-items:start; }
+    .score { font-size:22px; font-weight:900; color:#fff; background:var(--brand); min-width:54px; text-align:center; border-radius:8px; padding:8px 9px; }
+    .score.good { background:var(--good); }
+    .score.warn { background:var(--warn); }
+    .tags { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+    .tag { background:#e0dfdb; border-radius:4px; padding:5px 8px; font-size:12px; color:#46381f; }
+    .decision { display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .decision b { color:var(--good); }
+    .decision b.watch { color:var(--warn); }
+    .decision b.bad { color:var(--bad); }
+    .similarRefs { display:grid; gap:6px; margin-top:8px; }
+    .scoreBreakdown { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; margin:8px 0; }
+    .scorePart { border:1px solid var(--line); border-radius:4px; padding:6px 8px; background:#f4f1ea; font-size:12px; color:#625d58; }
+    .scorePart.hot { border-left:4px solid var(--good); }
+    .scorePart.slow { border-left:4px solid var(--bad); }
+    .scorePart.neutral { border-left:4px solid #d0cfc6; }
+    .refLine { border-left:3px solid var(--line); padding:5px 8px; background:#f4f1ea; border-radius:4px; font-size:12px; color:#625d58; }
+    .refLine.hot { border-left-color:#968871; }
+    .refLine.slow { border-left-color:#625d58; }
+    .chatBox { border:1px solid #c8c2b4; border-radius:4px; padding:16px; background:linear-gradient(135deg,#fffdf8,#e0dfdb); box-shadow:0 14px 34px rgba(70,56,31,.10); }
+    .chatHead { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; }
+    .chatHead b { font-size:18px; color:#221814; }
+    .chatLog { display:grid; gap:10px; min-height:260px; max-height:440px; overflow:auto; margin:10px 0; padding-right:4px; }
+    .chatMsg { border:1px solid var(--line); border-radius:4px; padding:11px 12px; background:#fffdf8; font-size:13px; line-height:1.55; }
+    .chatMsg.user { background:#ece4d4; border-color:#968871; }
+    .chatResults { display:grid; gap:9px; margin-top:10px; }
+    .chatItem { display:grid; grid-template-columns:132px 1fr; gap:12px; border:1px solid var(--line); border-left:5px solid var(--nav2); border-radius:4px; padding:10px; background:#fffdf8; }
+    .chatPic { width:132px; height:104px; border-radius:3px; background:linear-gradient(135deg,#e0dfdb,#fffdf8); border:1px solid #d0cfc6; object-fit:cover; display:grid; place-items:center; color:#625d58; font-size:12px; text-align:center; overflow:hidden; }
+    .chatPic img { width:100%; height:100%; object-fit:cover; border-radius:3px; }
+    .chatAsk { display:grid; grid-template-columns:1fr 92px 92px; gap:8px; }
+    .itemCard.generated .thumb { background:#eee9df; object-fit:cover; }
+    .extensionReason { margin:8px 0; padding:10px; border-left:4px solid var(--accent); background:#f4f1ea; color:#4d463d; line-height:1.6; }
+    .empty { border:1px dashed var(--line); border-radius:4px; padding:28px; text-align:center; color:var(--muted); background:#fffdf8; }
+    @media (max-width:1100px) { .app { grid-template-columns:1fr; } aside { position:static; } .uploadWorkspace,.uploadTools,.grid2,.catGrid { grid-template-columns:1fr; } .uploadPanel,.scoreGuide { grid-column:auto; grid-row:auto; position:static; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="logo">AS</div><div><b>AIR SPACE AI</b><span>商品企劃分析系統</span></div></div>
+      <nav>
+        <a class="active" href="#factor">銷售分析</a>
+        <a href="#factor">支線因素</a>
+        <a href="#upload">改款延伸</a>
+      </nav>
+      <div class="sideBlock">
+        <div class="small" style="color:#d0cfc6">目前設定</div>
+        <div class="sideLine"><span>品牌支線</span><b id="sideBranch">AS</b></div>
+        <div class="sideLine"><span>銷售口徑</span><b id="sideChannel">總</b></div>
+        <div class="sideLine"><span>暢銷定義</span><b id="sideHot">四週同品類前30%</b></div>
+        <div class="sideLine"><span>滯銷定義</span><b id="sideSlow">四週同品類後30%</b></div>
+        <div class="small" style="color:#d0cfc6; margin-top:10px">評分：基礎5分；元素分數=熱銷率×樣本可信度×款數權重，滯銷反向扣分。袖型只辨識，不列入分數。</div>
+      </div>
+    </aside>
+    <main>
+      <section id="factor">
+        <div class="sectionTitle">
+          <div>
+            <div class="small" style="color:#625d58">功能 1</div>
+            <h1>依品項熱銷 / 滯銷標籤分析</h1>
+          </div>
+          <div class="controls">
+            <select id="categoryFilter"><option value="全部品類">全部品類</option></select>
+            <button id="refreshFactors">重新分析</button>
+          </div>
+        </div>
+        <div id="branches" class="branchBar"></div>
+        <div id="channels" class="channelBar"></div>
+        <div class="grid2">
+          <div class="factorBox"><h3>熱銷元素</h3><div id="overallHot" class="chips"></div></div>
+          <div class="factorBox"><h3>滯銷元素</h3><div id="overallSlow" class="chips"></div></div>
+        </div>
+        <div id="categoryCards" class="catGrid"></div>
+      </section>
+
+      <section id="upload">
+        <div class="small" style="color:#625d58; margin-top:26px">功能 2</div>
+        <h2>AI 高評分改款延伸</h2>
+        <div class="uploadWorkspace">
+          <div class="uploadPanel">
+            <div class="uploadTools">
+            <div class="drop">
+              <strong>上傳參考款式圖</strong>
+              <div class="small">支援 JPG、PNG、WEBP。先分析參考圖，再依熱銷元素產生跨品類延伸款。</div>
+              <input id="files" type="file" accept="image/*" multiple />
+            </div>
+              <div>
+                <label class="small"><b>改款延伸說明</b></label>
+                <textarea id="note" placeholder="可輸入希望保留或延伸方向，例如：保留方領與腰身，優先延伸洋裝、套裝、連身褲。"></textarea>
+              </div>
+              <button id="analyzeBtn" type="button" style="width:100%">生成延伸款式</button>
+            </div>
+            <div id="status" class="status">先上傳圖片並輸入改款說明，按「生成延伸款式」後才會開始。</div>
+          </div>
+          <div class="resultPanel">
+            <div id="results" class="cards"><div class="empty">尚未上傳圖片。</div></div>
+          </div>
+          <aside class="scoreGuide">
+            <h3>改款生成與評分標準</h3>
+            <div class="small">AI 會先分析參考圖，再保留高分熱銷元素，優先做跨品類延伸；生成後仍用原本評分邏輯計算。</div>
+            <div class="scoreFormula">
+              <div><span>基礎分</span><b>5 分</b></div>
+              <div><span>元素分數</span><b>熱銷率 × 可信度 × 款數權重</b></div>
+              <div><span>滯銷元素</span><b>反向扣分</b></div>
+              <div><span>同款/類似暢銷款</span><b>+0.5 ~ +1</b></div>
+              <div><span>同款/類似滯銷款</span><b>-0.5 ~ -1</b></div>
+            </div>
+            <ul>
+              <li>樣本可信度：1-2款 40%、3-5款 60%、6-10款 80%、11款以上 100%</li>
+              <li>款數權重：1-2款=1、3-5款=2、6-10款=3、11-20款=4、21款以上=5</li>
+              <li>設計元素：蕾絲、綁帶、荷葉、抽繩、開衩、挖肩等</li>
+              <li>版型：短版、長版、合身、寬鬆、A 字、窄管、寬褲等</li>
+              <li>領型：V 領、方領、圓領、U 領、一字領、平口、翻領等</li>
+              <li>袖型/肩帶：只做辨識備註，不列入加扣分</li>
+              <li>材質/面料：針織、蕾絲、雪紡、棉、牛仔、皮革、緞面等</li>
+              <li>風格感：甜美、辣妹、休閒、簡約、正式、度假、韓系等</li>
+              <li>圖案/花色：印花、條紋、格紋、素色、點點、豹紋、LOGO 等</li>
+              <li>未出現在目前支線/通路/品類因素中的標籤不計分</li>
+            </ul>
+          </aside>
+          <div class="chatBox">
+            <div class="chatHead">
+              <b>AI 資料問答</b>
+              <span class="small">總銷/累銷查 Excel；熱銷/滯銷查四週標籤</span>
+            </div>
+            <div id="chatLog" class="chatLog"><div class="chatMsg">可以問：總銷超過500件的皮外套有哪些、熱銷皮外套有哪些、AS 滯銷蕾絲洋裝。問「總銷/累銷」會查 Excel；問「熱銷/滯銷」會查四週標籤。</div></div>
+            <div class="chatAsk">
+              <input id="chatInput" type="text" placeholder="輸入問題，例如：總銷超過500件的皮外套有哪些" />
+              <button id="chatBtn" type="button">詢問</button>
+              <button id="chatResetBtn" type="button" class="secondary">重問</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    let APP = {branches: [], images: {}};
+    let activeBranch = null;
+    let activeChannel = '總';
+    const state = [];
+    const chatMemory = { lastRows: [], lastQuestion: '', lastMode: '', lastScope: '全部支線' };
+    const els = {
+      branches: document.getElementById('branches'),
+      channels: document.getElementById('channels'),
+      categoryFilter: document.getElementById('categoryFilter'),
+      overallHot: document.getElementById('overallHot'),
+      overallSlow: document.getElementById('overallSlow'),
+      categoryCards: document.getElementById('categoryCards'),
+      files: document.getElementById('files'),
+      note: document.getElementById('note'),
+      results: document.getElementById('results'),
+      status: document.getElementById('status'),
+      chatLog: document.getElementById('chatLog'),
+      chatInput: document.getElementById('chatInput'),
+      chatBtn: document.getElementById('chatBtn'),
+      chatResetBtn: document.getElementById('chatResetBtn')
+    };
+    function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function chip(row, type) { return `<span class="chip ${type}">${esc(row.feature)} <b>${row.count ?? row.hot_count ?? row.slow_count ?? ''}</b></span>`; }
+    function validFeatureName(feature) {
+      const text = String(feature || '').trim();
+      return text && !text.includes('?') && !text.includes('�');
+    }
+    function renderBranch() {
+      els.branches.innerHTML = APP.branches.map(b => `<button class="branch ${b.id===activeBranch.id?'active':''}" data-id="${b.id}">${esc(b.name)}</button>`).join('');
+      els.branches.querySelectorAll('button').forEach(btn => btn.onclick = () => {
+        activeBranch = APP.branches.find(b => b.id === btn.dataset.id);
+        renderAll();
+      });
+      document.getElementById('sideBranch').textContent = activeBranch.name;
+      document.getElementById('sideChannel').textContent = channelLabel(activeChannel);
+      document.getElementById('sideHot').textContent = activeBranch.hotDefinition;
+      document.getElementById('sideSlow').textContent = activeBranch.slowDefinition;
+    }
+    function channelLabel(c) {
+      return c === '總' ? '總(網路+門市)' : c;
+    }
+    function normalizeLoadedData() {
+      if (!APP || !Array.isArray(APP.branches)) return;
+      APP.dataVersion = APP.dataVersion || `資料修正版 ${new Date().toLocaleString('zh-TW')}`;
+      APP.branches.forEach(branch => {
+        const channels = branch.channels || ['總','網路','門市'];
+        const categories = branch.categories || [];
+        const rules = branch.rules || [];
+        const baseCards = new Map((branch.categoryCards || []).map(c => [c.category, c]));
+        const labelCounts = {};
+        channels.forEach(ch => {
+          labelCounts[ch] = {};
+          categories.forEach(cat => labelCounts[ch][cat] = {hot:0, slow:0});
+        });
+        Object.values(branch.labelsByCode || {}).flat().forEach(label => {
+          const ch = label.channel || '總';
+          const cat = label.category;
+          if (!labelCounts[ch] || !labelCounts[ch][cat]) return;
+          if (String(label.label || '').includes('暢銷')) labelCounts[ch][cat].hot += 1;
+          if (String(label.label || '').includes('滯銷')) labelCounts[ch][cat].slow += 1;
+        });
+        const hotRows = rows => rows
+          .filter(r => validFeatureName(r.feature) && Number(r.hot_count || 0) > Number(r.slow_count || 0) && Number(r.hot_count || 0) > 0)
+          .sort((a,b) => Number(b.hot_count || 0) - Number(a.hot_count || 0))
+          .slice(0,14);
+        const slowRows = rows => rows
+          .filter(r => validFeatureName(r.feature) && Number(r.slow_count || 0) > Number(r.hot_count || 0) && Number(r.slow_count || 0) > 0)
+          .sort((a,b) => Number(b.slow_count || 0) - Number(a.slow_count || 0))
+          .slice(0,14);
+        branch.categoryCardsByChannel = {};
+        branch.overviewHotByChannel = {};
+        branch.overviewSlowByChannel = {};
+        channels.forEach(ch => {
+          const chRules = rules.filter(r => (r.channel || '總') === ch);
+          branch.overviewHotByChannel[ch] = hotRows(chRules).map(r => ({feature:r.feature, count:r.hot_count}));
+          branch.overviewSlowByChannel[ch] = slowRows(chRules).map(r => ({feature:r.feature, count:r.slow_count}));
+          branch.categoryCardsByChannel[ch] = categories.map(cat => {
+            const base = {...(baseCards.get(cat) || {category:cat, items:0, qty:0})};
+            const catRules = chRules.filter(r => r.category === cat);
+            const counts = labelCounts[ch]?.[cat] || {hot:0, slow:0};
+            base.hotLabels = counts.hot;
+            base.slowLabels = counts.slow;
+            base.hotCount = counts.hot;
+            base.slowCount = counts.slow;
+            base.hotFactors = hotRows(catRules);
+            base.slowFactors = slowRows(catRules);
+            return base;
+          });
+        });
+        branch.categoryCards = branch.categoryCardsByChannel['總'] || branch.categoryCards || [];
+        branch.overviewHot = branch.overviewHotByChannel['總'] || branch.overviewHot || [];
+        branch.overviewSlow = branch.overviewSlowByChannel['總'] || branch.overviewSlow || [];
+      });
+    }
+    function renderChannels() {
+      const channels = activeBranch.channels || ['總','網路','門市'];
+      if (!channels.includes(activeChannel)) activeChannel = '總';
+      els.channels.innerHTML = channels.map(c => `<button class="channelBtn ${c===activeChannel?'active':''}" data-channel="${esc(c)}">${esc(channelLabel(c))}</button>`).join('');
+      els.channels.querySelectorAll('button').forEach(btn => btn.onclick = () => {
+        activeChannel = btn.dataset.channel;
+        renderAll();
+      });
+    }
+    function renderFilters() {
+      const old = els.categoryFilter.value;
+      const cards = activeBranch.categoryCardsByChannel?.[activeChannel] || activeBranch.categoryCards || [];
+      els.categoryFilter.innerHTML = '<option value="全部品類">全部品類</option>' + cards.map(c => `<option value="${esc(c.category)}">${esc(c.category)}</option>`).join('');
+      if ([...els.categoryFilter.options].some(o => o.value === old)) els.categoryFilter.value = old;
+    }
+    function renderFactors() {
+      const selected = els.categoryFilter.value;
+      const allCards = activeBranch.categoryCardsByChannel?.[activeChannel] || activeBranch.categoryCards || [];
+      const cards = selected === '全部品類' ? allCards : allCards.filter(c => c.category === selected);
+      const hot = selected === '全部品類'
+        ? (activeBranch.overviewHotByChannel?.[activeChannel] || activeBranch.overviewHot || [])
+        : (cards[0]?.hotFactors || []).map(r => ({ feature:r.feature, count:r.hot_count }));
+      const slow = selected === '全部品類'
+        ? (activeBranch.overviewSlowByChannel?.[activeChannel] || activeBranch.overviewSlow || [])
+        : (cards[0]?.slowFactors || []).map(r => ({ feature:r.feature, count:r.slow_count }));
+      els.overallHot.innerHTML = hot.map(r => chip(r, 'hot')).join('') || '<span class="small">暫無資料</span>';
+      els.overallSlow.innerHTML = slow.map(r => chip(r, 'slow')).join('') || '<span class="small">暫無資料</span>';
+      els.categoryCards.innerHTML = cards.map(c => `
+        <article class="catCard">
+          <div class="catHead">
+            <div><h3>${esc(c.category)}</h3><div class="small">${c.items} 款 / ${Number(c.qty).toLocaleString()} 件</div></div>
+            <div class="small">熱銷 ${c.hotLabels}<br>滯銷 ${c.slowLabels}</div>
+          </div>
+          <div class="labelCols">
+            <div><div class="subhead">熱銷標籤</div><div class="chips">${c.hotFactors.map(r => `<span class="chip hot">${esc(r.feature)} ${r.hot_count}</span>`).join('') || '<span class="small">暫無</span>'}</div></div>
+            <div><div class="subhead">滯銷標籤</div><div class="chips">${c.slowFactors.map(r => `<span class="chip slow">${esc(r.feature)} ${r.slow_count}</span>`).join('') || '<span class="small">暫無</span>'}</div></div>
+          </div>
+        </article>`).join('');
+    }
+    function renderAll() { renderBranch(); renderChannels(); renderFilters(); renderFactors(); }
+    function branchFromText(text) {
+      const upper = String(text || '').toUpperCase();
+      if (upper.includes('A+') || upper.includes('大尺碼')) return 'A+';
+      if (upper.includes('AS')) return 'AS';
+      if (upper.includes('CA')) return 'CA';
+      if (upper.includes('OL')) return 'OL';
+      return '';
+    }
+    function applyBranchFromNote() {
+      const branchId = branchFromText(els.note.value);
+      if (!branchId) return false;
+      const next = APP.branches.find(b => b.id === branchId || b.name === branchId);
+      if (!next || next.id === activeBranch.id) return false;
+      activeBranch = next;
+      renderAll();
+      return true;
+    }
+    function syncKnownItemsToActiveBranch() {
+      for (const item of state) {
+        const known = item.code ? activeBranch.knownItems[item.code] : null;
+        if (!known || item.source === 'AI分析') continue;
+        item.title = known.name || item.title;
+        item.category = known.category || item.category;
+        item.middleCategory = known.middleCategory || item.middleCategory || '';
+        item.source = '歷史款號';
+      }
+    }
+    els.categoryFilter.onchange = renderFactors;
+    document.getElementById('refreshFactors').onclick = renderFactors;
+
+    function detectCode(name) {
+      const m = String(name).toUpperCase().match(/\b[A-Z]{1,5}\d{2,7}[A-Z]{0,4}\b/);
+      return m ? m[0] : '';
+    }
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+    const CONFLICT_FEATURES = [
+      ['窄管','闊腿','寬褲','寬版','寬鬆'],
+      ['直筒','闊腿','寬褲'],
+      ['合身','Oversized','寬鬆','寬版'],
+      ['緊身','寬鬆','寬版','Oversized'],
+      ['高腰','低腰'],
+      ['短版','長版']
+    ];
+    function rulesFor(category) { return activeBranch.rules.filter(r => r.category === category && r.channel === activeChannel && r.score_weight !== 0); }
+    function featureAliases(feature) {
+      feature = normalizeFeature(feature);
+      const words = new Set([feature]);
+      for (const [group, vals] of Object.entries(QUERY_FEATURES)) {
+        if (group === feature || vals.includes(feature)) vals.forEach(v => words.add(v));
+      }
+      return [...words];
+    }
+    const FEATURE_NORMALIZE = {
+      '綁帶':['綁帶','綁帶設計','後綁帶','繫帶','綁繩','綁結'],
+      '鏤空':['鏤空','簍空','鏤空設計','後鏤空','腰鏤空','挖空'],
+      '魚尾裙':['魚尾','魚尾裙','魚尾洋裝','魚尾長裙'],
+      '細肩帶':['細肩','細肩帶'],
+      '長洋裝':['長洋裝','長裙','長版洋裝'],
+      '短洋裝':['短洋裝','短版洋裝'],
+      '合身':['合身','修身','緊身'],
+      '素色':['素色','純色'],
+      '條紋':['直紋','直條','條紋','橫條'],
+      '格紋':['格紋','格子','格子紋'],
+      '波點':['波點','圓點','點點'],
+      '百褶':['百褶','百摺','壓褶','打褶','褶皺','褶線'],
+      '蕾絲':['蕾絲','蕾絲邊','蕾絲拼接','蕾絲材質'],
+      '透膚':['透膚','透紗','薄紗','網紗'],
+      '空氣層':['空氣層','空氣層面料'],
+      '蛋糕裙':['蛋糕','蛋糕裙','蛋糕短裙','蛋糕長裙'],
+      '開衩':['開衩','開岔'],
+      '抽繩':['抽繩','抽繩設計'],
+      '不對稱':['不對稱','不對稱剪裁'],
+      '荷葉':['荷葉','荷葉邊'],
+      '蝴蝶結':['蝴蝶結','蝴蝶']
+    };
+    const NON_SCORING_FEATURES = new Set(['素色','純色','長洋裝','短洋裝','長裙','短裙','長版','短版','長袖','短袖','無袖','細肩帶','寬肩帶','肩帶']);
+    const PRIORITY_FEATURES = ['蕾絲','透膚','鏤空','綁帶','百褶','格紋','條紋','波點','空氣層','蛋糕裙','魚尾裙','開衩','抽繩','不對稱','荷葉','蝴蝶結'];
+    function normalizeFeature(feature) {
+      const text = String(feature || '').trim();
+      if (!text) return '';
+      for (const canonical of PRIORITY_FEATURES) {
+        const words = FEATURE_NORMALIZE[canonical] || [canonical];
+        if (text === canonical || words.some(w => text.includes(w))) return canonical;
+      }
+      for (const [canonical, words] of Object.entries(FEATURE_NORMALIZE)) {
+        if (text === canonical || words.some(w => text.includes(w))) return canonical;
+      }
+      return text;
+    }
+    function expandFeatureTokens(feature) {
+      const text = String(feature || '').trim();
+      if (!text) return [];
+      const hits = [];
+      for (const [canonical, words] of Object.entries(FEATURE_NORMALIZE)) {
+        if (text === canonical || words.some(w => text.includes(w))) hits.push(canonical);
+      }
+      const normalized = normalizeFeature(text);
+      if (normalized) hits.push(normalized);
+      return [...new Set(hits)];
+    }
+    function normalizeFeatureList(list) {
+      return [...new Set((list || []).flatMap(expandFeatureTokens).filter(Boolean))];
+    }
+    function isScoreableFeature(feature) {
+      const f = normalizeFeature(feature);
+      return Boolean(f) && !NON_SCORING_FEATURES.has(f);
+    }
+    function localFeatureHints(item) {
+      const text = `${item.name || ''} ${item.title || ''} ${item.middleCategory || ''} ${item.summary || ''} ${(item.features || []).join(' ')}`;
+      return normalizeFeatureList(Object.entries(FEATURE_NORMALIZE)
+        .filter(([canonical, words]) => words.some(w => text.includes(w)))
+        .map(([canonical]) => canonical));
+    }
+    function itemText(x) { return `${x.code || ''} ${x.name || ''} ${x.title || ''} ${x.category || ''} ${x.middleCategory || ''} ${(x.features || []).join(' ')}`.toUpperCase(); }
+    function styleType(x) {
+      const text = `${x.name || ''} ${x.title || ''} ${x.middleCategory || ''} ${x.summary || ''} ${(x.features || []).join(' ')}`.toUpperCase();
+      if (/襯衫|SHIRT/.test(text)) return '襯衫';
+      if (/BRA|BRATOP|BRA TOP|背心|細肩|肩帶|小可愛/.test(text)) return '背心/BRA';
+      if (/TEE|T恤/.test(text)) return 'TEE';
+      if (/針織|毛衣/.test(text)) return '針織/毛衣';
+      if (/罩衫|外罩|開襟|罩外/.test(text)) return '罩衫';
+      if (/皮衣|皮革|皮外套|PU/.test(text)) return '皮革外套';
+      if (/西外|西裝外套|西裝/.test(text)) return '西裝外套';
+      if (/窄管|直筒|寬褲|闊腿|喇叭|牛仔褲|長褲|短褲|褲/.test(text)) return '褲型';
+      if (/洋裝|連身裙|長洋|短洋/.test(text)) return '洋裝';
+      return '';
+    }
+    function styleCompatible(item, x) {
+      const a = styleType(item);
+      const b = styleType(x);
+      if (!a || !b) return true;
+      if (a === b) return true;
+      if ((a === '襯衫' && b === '背心/BRA') || (a === '背心/BRA' && b === '襯衫')) return false;
+      if ((a === '襯衫' && b === 'TEE') || (a === 'TEE' && b === '襯衫')) return false;
+      if ((a === '褲型' && b !== '褲型') || (b === '褲型' && a !== '褲型')) return false;
+      return true;
+    }
+    function featureMatches(feature, x) {
+      const text = itemText(x);
+      return featureAliases(feature).some(w => text.includes(String(w).toUpperCase()));
+    }
+    function conflictsWithItem(item, x) {
+      const a = new Set(normalizeFeatureList(item.features || []));
+      const text = itemText(x);
+      return CONFLICT_FEATURES.some(group => {
+        const itemHas = group.filter(f => a.has(f) || featureMatches(f, item));
+        if (!itemHas.length) return false;
+        const otherHas = group.filter(f => text.includes(String(f).toUpperCase()));
+        return otherHas.length && !otherHas.some(f => itemHas.includes(f));
+      });
+    }
+    function similarItems(item, labelText) {
+      const examples = activeBranch.labelExamples?.[item.category] || [];
+      const ruleRows = rulesFor(item.category);
+      const scoreFeatures = normalizeFeatureList(item.features || []).filter(f => {
+        if (!isScoreableFeature(f)) return false;
+        const matchedRules = ruleRows.filter(x => normalizeFeature(x.feature) === f);
+        return matchedRules.length && aspectFromRule(mergeFeatureRules(matchedRules, f), f);
+      });
+      return examples
+        .filter(x => String(x.label || '').includes(labelText) && x.code !== item.code && x.channel === activeChannel)
+        .filter(x => styleCompatible(item, x))
+        .map(x => {
+          const common = scoreFeatures.filter(f => featureMatches(f, x));
+          const conflict = conflictsWithItem(item, x);
+          return { ...x, common, conflict, sim: common.length * 10 + Math.min(3, Math.floor((x.channel_qty || x.total_qty || 0) / 50)) - (conflict ? 100 : 0) };
+        })
+        .filter(x => x.common.length && !x.conflict)
+        .sort((a,b) => b.sim - a.sim || (b.channel_qty || b.total_qty || 0) - (a.channel_qty || a.total_qty || 0))
+        .slice(0, 3);
+    }
+    function formatSimilar(rows) {
+      return rows.map(x => `${x.code} ${x.name}(${x.period}，${x.label}，共通：${(x.common || []).join('、') || '同品類'})`).join('；');
+    }
+    function refCard(x, type) {
+      return `<div class="refLine ${type}"><b>${esc(x.code)}</b>　${esc(x.name)}<br><span class="small">${esc(x.period)} / ${esc(x.label)} / ${Number(x.total_qty || 0).toLocaleString()}件${x.source_pdf ? ' / 原圖：' + esc(x.source_pdf) + ' 第' + esc(x.page) + '頁' : ''}</span><br><span class="small">共通：${esc((x.common || []).join('、') || x.middleCategory || '同款式型')}</span></div>`;
+    }
+    const QUERY_FEATURES = {
+      '皮革/皮質':['皮外套','皮革','皮質','仿皮','皮衣','皮'],
+      '罩衫/透膚':['罩衫','透膚','透紗','網紗','薄紗'],
+      '蕾絲':['蕾絲'],
+      '短版':['短版','短款'],
+      '收腰':['收腰','腰身','綁帶'],
+      '附胸墊':['胸墊','BRA','BRA TOP','背心'],
+      '牛仔':['牛仔','丹寧'],
+      '喇叭':['喇叭'],
+      '直筒':['直筒'],
+      '窄管':['窄管','緊身褲','鉛筆褲'],
+      '闊腿':['闊腿','寬褲','寬版褲'],
+      '高腰':['高腰'],
+      '中腰':['中腰'],
+      '低腰':['低腰'],
+      '羅紋':['羅紋'],
+      'V領':['V領','深V'],
+      '荷葉':['荷葉','荷葉邊','木耳邊','波浪邊','波浪'],
+      '寬鬆':['寬鬆','寬版','落肩'],
+      '合身':['合身','修身'],
+      '雪紡/輕薄':['雪紡','輕薄','涼感'],
+      '開衩':['開衩'],
+      '西裝感':['西裝','西外']
+    };
+    function queryCategory(q) {
+      if (/外套|皮衣|皮外套/.test(q)) return '外套';
+      if (/連身褲/.test(q)) return '連身褲';
+      if (/洋裝|長洋|短洋/.test(q)) return '洋裝';
+      if (/針織/.test(q)) return '針織';
+      if (/套裝|成套/.test(q)) return '套裝';
+      if (/褲裙/.test(q)) return '褲裙';
+      if (/裙/.test(q)) return '裙子';
+      if (/褲/.test(q)) return '褲子';
+      if (/上衣|背心|罩衫|襯衫|TEE|毛衣/.test(q)) return '上衣';
+      return '';
+    }
+    function queryLabel(q) {
+      if (/滯銷|不好|不賣|低分/.test(q)) return '滯銷';
+      if (/熱銷|暢銷|賣好|高分|好賣/.test(q)) return '暢銷';
+      return '';
+    }
+    function queryFeatures(q) {
+      return Object.entries(QUERY_FEATURES).filter(([feature, words]) => words.some(w => q.toUpperCase().includes(w.toUpperCase()))).map(([feature]) => feature);
+    }
+    function queryRawFeatureWords(q) {
+      const known = new Set(Object.values(QUERY_FEATURES).flat().map(w => String(w).toUpperCase()));
+      return String(q || '').toUpperCase()
+        .split(/\s+|，|,|。|有哪些|請問|可以|給我|找|的|總銷|累銷|銷售|銷量|超過|以上|大於|至少|元素|件|款|款號|商品|品項|類|圖片|跟圖|附圖|看圖|圖|和|及|跟/)
+        .map(w => w.trim())
+        .filter(w => w.length >= 2 && !/^\d+$/.test(w) && !known.has(w) && !/^(AS|A\+|CA|OL|W\d+|上衣|洋裝|裙子|裙|褲子|褲|外套|套裝|罩衫|襯衫|背心)$/.test(w));
+    }
+    function queryFeatureHit(feature, text) {
+      return (QUERY_FEATURES[feature] || [feature]).some(w => text.includes(String(w).toUpperCase()));
+    }
+    function isCumulativeQuery(q) {
+      return /總銷|累銷|累計|銷售|銷售數量|銷售件數|銷量|超過|以上|大於|至少|件/.test(q) && !/四週|週|W\d+|滯銷|暢銷|熱銷/.test(q);
+    }
+    function queryThreshold(q) {
+      const m = String(q || '').replace(/,/g, '').match(/(\d{2,7})\s*(件|以上|超過|大於|至少)?/);
+      return m ? Number(m[1]) : 0;
+    }
+    function queryWords(q) {
+      return String(q || '').toUpperCase().split(/\s+|，|,|有哪些|請問|可以|給我|找|的|總銷|累銷|銷售|超過|以上|大於|至少|元素|件|款|支線|款號|圖片|跟圖|附圖|看圖|圖/).filter(w => w.length >= 2 && !/^\d+$/.test(w) && !/^(AS|A\+|CA|OL|上衣|洋裝|裙子|裙|褲子|褲|外套|套裝)$/.test(w));
+    }
+    function chatImageHtml(x) {
+      const src = x.imageUrl ? (APP.images?.[x.imageUrl] || x.imageUrl) : '';
+      if (src) return `<div class="chatPic"><img src="${esc(src)}" alt="" onerror="this.parentElement.textContent='縮圖未上傳'"></div>`;
+      return `<div class="chatPic">待補<br>款式圖</div>`;
+    }
+    function queryBranches(q) {
+      const text = String(q || '').toUpperCase();
+      const picked = APP.branches.filter(b => text.includes(String(b.name).toUpperCase()));
+      return picked.length ? picked : APP.branches;
+    }
+    function branchScopeLabel(q) {
+      const branches = queryBranches(q);
+      return branches.length === APP.branches.length ? '全部支線' : branches.map(b => b.name).join('、');
+    }
+    function wantsStrictLeather(q) {
+      return /皮外套|皮衣|皮革外套|皮質外套|仿皮外套|PU外套/i.test(q);
+    }
+    function wantsImage(q) {
+      return /有圖|圖片|款式圖|跟圖|附圖|看圖/.test(q);
+    }
+    function isStrictLeatherOuterwear(x) {
+      const name = `${x.name || ''} ${(x.features || []).join(' ')}`.toUpperCase();
+      if (/皮草|麂皮|俏皮/.test(name)) return false;
+      return /皮革|皮質|仿皮|皮衣|PU/.test(name);
+    }
+    function isNewTopic(q) {
+      if (/總銷|累銷|銷售|銷量|超過|以上|大於|至少|件/.test(q)) return true;
+      if (queryCategory(q)) return true;
+      if (queryFeatures(q).length || queryRawFeatureWords(q).length) return true;
+      if (/外套|洋裝|上衣|裙|褲|套裝|背心|罩衫|襯衫|針織|TEE|毛衣/.test(q)) return true;
+      return false;
+    }
+    function isFollowUp(q) {
+      if (!chatMemory.lastRows.length) return false;
+      if (/總銷|累銷|熱銷|暢銷|滯銷/.test(q)) return false;
+      if (isNewTopic(q) && !/只看|只要|只列|不要|排除|不是|前\d+|排序/.test(q)) return false;
+      return /不要|排除|不是|只看|只要|只列|給我|圖片|有圖|款號|銷量|排序|前\d+|前[一二三四五六七八九十]/.test(q)
+        || (/AS|A\+|CA|OL/i.test(q) && /只|要|看|呢|嗎|有|部分|限定|支線/.test(q))
+        || /改成|換成|幫我|我要|列出|縮小|放寬/.test(q)
+        || !/外套|洋裝|上衣|裙|褲|套裝|AS|A\+|CA|OL/i.test(q);
+    }
+    function refineRows(rows, q) {
+      let out = [...rows];
+      if (/不要|排除|不是/.test(q)) {
+        if (/皮草/.test(q)) out = out.filter(x => !/皮草/.test(x.name || ''));
+        if (/麂皮/.test(q)) out = out.filter(x => !/麂皮/.test(x.name || ''));
+      }
+      const pickedBranches = APP.branches.filter(b => String(q || '').toUpperCase().includes(String(b.name).toUpperCase())).map(b => b.name);
+      if (pickedBranches.length) out = out.filter(x => pickedBranches.includes(x.branch));
+      if (wantsImage(q)) out = out.filter(x => x.imageUrl);
+      if (/銷量|總銷|累銷|高到低|排序/.test(q)) out.sort((a,b) => (b.sales_qty || b.total_qty || 0) - (a.sales_qty || a.total_qty || 0));
+      const m = String(q || '').replace(/,/g, '').match(/(\d{2,7})\s*(件|以上|超過|大於|至少)?/);
+      if (m) out = out.filter(x => Number(x.sales_qty || x.total_qty || 0) >= Number(m[1]));
+      return out.slice(0, 20);
+    }
+    function findExamples(question) {
+      const q = String(question || '').trim();
+      const label = queryLabel(q);
+      const category = queryCategory(q);
+      const qFeatures = queryFeatures(q);
+      const rawFeatureWords = queryRawFeatureWords(q);
+      const branches = queryBranches(q);
+      const requireImage = wantsImage(q);
+      const rows = [];
+      for (const branch of branches) {
+        const cats = category ? [category] : branch.categories;
+        for (const cat of cats) {
+          for (const x of branch.labelExamples?.[cat] || []) {
+            if (label && !String(x.label || '').includes(label)) continue;
+            const common = (x.features || []).filter(f => qFeatures.includes(f));
+            const text = `${x.code} ${x.name} ${x.category} ${(x.features || []).join(' ')}`.toUpperCase();
+            const words = q.toUpperCase().split(/\s+|，|,|有哪些|請問|可以|給我|找|的/).filter(w => w.length >= 2);
+            const wordHits = words.filter(w => text.includes(w)).length;
+            const featureHits = qFeatures.filter(f => common.includes(f) || queryFeatureHit(f, text));
+            if (qFeatures.length && featureHits.length < qFeatures.length) continue;
+            if (rawFeatureWords.length && !rawFeatureWords.every(w => text.includes(w))) continue;
+            if (requireImage && !x.imageUrl) continue;
+            rows.push({...x, branch: branch.name, common, sim: common.length * 5 + wordHits * 2 + Math.min(5, Math.floor((x.total_qty || 0) / 50))});
+          }
+        }
+      }
+      return rows.sort((a,b) => b.sim - a.sim || (b.total_qty || 0) - (a.total_qty || 0)).slice(0, 12);
+    }
+    function findCumulativeExamples(question, opts = {}) {
+      const q = String(question || '').trim();
+      const category = queryCategory(q);
+      const qFeatures = queryFeatures(q);
+      const rawFeatureWords = queryRawFeatureWords(q);
+      const threshold = queryThreshold(q);
+      const branches = queryBranches(q);
+      const words = queryWords(q);
+      const wantsLeather = /皮外套|皮衣|皮革|皮質|仿皮|PU/i.test(q);
+      const strictLeather = wantsStrictLeather(q);
+      const requireImage = wantsImage(q);
+      const rows = [];
+      for (const branch of branches) {
+        for (const x of branch.cumulativeItems || []) {
+          if (category && x.category !== category) continue;
+          const qtyValue = Number(x.sales_qty || x.current_year_qty || x.year_total_qty || x.total_qty || 0);
+          if (!opts.ignoreThreshold && threshold && qtyValue < threshold) continue;
+          const text = `${branch.name} ${x.code} ${x.name} ${x.category} ${(x.features || []).join(' ')}`.toUpperCase();
+          if (strictLeather && !isStrictLeatherOuterwear(x)) continue;
+          if (!strictLeather && wantsLeather && !/(皮|PU|仿皮|皮革|皮質)/i.test(text)) continue;
+          const common = (x.features || []).filter(f => qFeatures.includes(f));
+          const featureHits = qFeatures.filter(f => common.includes(f) || queryFeatureHit(f, text));
+          if (qFeatures.length && featureHits.length < qFeatures.length) continue;
+          if (rawFeatureWords.length && !rawFeatureWords.every(w => text.includes(w))) continue;
+          if (requireImage && !x.imageUrl) continue;
+          const wordHits = words.filter(w => text.includes(w)).length;
+          if ((!qFeatures.length && words.length) && !wordHits && !wantsLeather && !category && !threshold) continue;
+          rows.push({...x, branch: branch.name, common, sales_qty: qtyValue, sim: common.length * 5 + wordHits * 2 + Math.min(20, Math.floor(qtyValue / 100))});
+        }
+      }
+      return rows.sort((a,b) => (b.sales_qty || 0) - (a.sales_qty || 0) || b.sim - a.sim).slice(0, 20);
+    }
+    function renderChatRows(rows, mode, q, intro) {
+      if (!rows.length) {
+        return mode === 'cumulative'
+          ? 'Excel 累銷資料內沒有找到符合條件的款式。你可以接著問「放寬成外套」或「不要限制皮革」。'
+          : '目前四週標籤內沒有找到符合條件的歷史款。你可以接著問「放寬成外套」或「只看AS」。';
+      }
+      const title = mode === 'cumulative' ? '查詢來源：Excel 累銷銷售明細' : '查詢來源：PDF 四週暢滯銷標籤';
+      const cards = rows.map(x => {
+        const qty = Number(x.sales_qty || x.total_qty || 0).toLocaleString();
+        const mainLine = mode === 'cumulative'
+          ? `${esc(x.branch)} / ${esc(x.category)} / 累銷 ${qty} 件 / 累銷金額 ${Number(x.sales_amount || 0).toLocaleString()}`
+          : `${esc(x.branch)} / ${esc(x.category)} / ${esc(x.period)} / ${esc(x.label)} / 四週銷售 ${qty} 件${x.source_pdf ? ' / 原圖：' + esc(x.source_pdf) + ' 第' + esc(x.page) + '頁' : ''}`;
+        const featureLine = mode === 'cumulative'
+          ? `特徵：${esc((x.common || []).join('、') || (x.features || []).slice(0,4).join('、') || '同品類')}`
+          : `共通特徵：${esc((x.common || []).join('、') || (x.features || []).slice(0,3).join('、') || '同品類')}`;
+        return `<div class="chatItem">${chatImageHtml(x)}<div><b>${esc(x.code)}</b>　${esc(x.name)}<br><span class="small">${mainLine}</span><br><span class="small">${featureLine}</span></div></div>`;
+      }).join('');
+      return `<div><b>${title}</b><br>${intro}</div><div class="chatResults">${cards}</div><div class="small">可以接著追問：只看AS、不要皮草、只列有圖、銷量排序、給我前5款。</div>`;
+    }
+    function findCategorySummary(question) {
+      const q = String(question || '').trim();
+      const category = queryCategory(q);
+      if (!category) return [];
+      const rows = [];
+      for (const branch of queryBranches(q)) {
+        const cards = branch.categoryCardsByChannel?.[activeChannel] || branch.categoryCards || [];
+        const card = cards.find(c => c.category === category);
+        if (card) rows.push({branch: branch.name, card});
+      }
+      return rows;
+    }
+    function renderCategorySummary(rows, q) {
+      const wantsSlow = /滯銷|皛舫|銝|銝/.test(q);
+      return rows.map(row => {
+        const card = row.card;
+        const primary = wantsSlow ? card.slowFactors : card.hotFactors;
+        const secondary = wantsSlow ? card.hotFactors : card.slowFactors;
+        return `<div><b>${esc(row.branch)} / ${esc(card.category)} ${wantsSlow ? '滯銷標籤' : '熱銷標籤'}</b>
+          <div class="small">${Number(card.items || 0).toLocaleString()} 款 / ${Number(card.qty || 0).toLocaleString()} 件</div>
+          <div class="tags">${primary.slice(0,12).map(x => `<span class="tag">${esc(x.feature)} ${x.hot_count || x.slow_count || x.count || ''}</span>`).join('')}</div>
+          <div class="small">對照參考：${secondary.slice(0,8).map(x => esc(x.feature)).join('、')}</div></div>`;
+      }).join('');
+    }
+    function askData() {
+      const q = els.chatInput.value.trim();
+      if (!q) return;
+      els.chatLog.insertAdjacentHTML('beforeend', `<div class="chatMsg user">${esc(q)}</div>`);
+      const followUp = isFollowUp(q);
+      const cumulative = followUp ? chatMemory.lastMode === 'cumulative' : isCumulativeQuery(q);
+      let rows = followUp ? refineRows(chatMemory.lastRows, q) : (cumulative ? findCumulativeExamples(q) : findExamples(q));
+      const scope = followUp ? chatMemory.lastScope : branchScopeLabel(q);
+      let relaxedIntro = '';
+      if (!rows.length && !followUp && cumulative && queryThreshold(q) && /放寬|附近|最高|接近/.test(q)) {
+        const relaxedRows = findCumulativeExamples(q, { ignoreThreshold: true });
+        if (relaxedRows.length) {
+          rows = relaxedRows.slice(0, 12);
+          relaxedIntro = `目前沒有完全符合「${queryThreshold(q).toLocaleString()}件以上」門檻的款式，先列出同條件下累銷最高的 ${rows.length} 款：`;
+        }
+      }
+      const intro = relaxedIntro || (followUp
+        ? `依上一題結果繼續篩選，剩下 ${rows.length} 筆：`
+        : `依 ${scope} ${cumulative ? '累銷資料' : '歷史標籤'}，找到 ${rows.length} 筆：`);
+      const categorySummary = (!rows.length && !followUp && !cumulative) ? findCategorySummary(q) : [];
+      const resultHtml = categorySummary.length
+        ? renderCategorySummary(categorySummary, q)
+        : renderChatRows(rows, cumulative ? 'cumulative' : 'label', q, intro);
+      chatMemory.lastRows = rows;
+      chatMemory.lastQuestion = q;
+      chatMemory.lastMode = cumulative ? 'cumulative' : 'label';
+      chatMemory.lastScope = scope;
+      els.chatLog.insertAdjacentHTML('beforeend', `<div class="chatMsg">${resultHtml}</div>`);
+      els.chatLog.scrollTop = els.chatLog.scrollHeight;
+      els.chatInput.value = '';
+    }
+    function resetChat() {
+      chatMemory.lastRows = [];
+      chatMemory.lastQuestion = '';
+      chatMemory.lastMode = '';
+      chatMemory.lastScope = '全部支線';
+      els.chatLog.innerHTML = '<div class="chatMsg">已重新開始。可以直接問：AS 總銷500以上外套款號跟圖、全部支線熱銷外套、OL 滯銷洋裝。</div>';
+      els.chatInput.value = '';
+      els.chatInput.focus();
+    }
+    const SCORE_ASPECTS = ['設計元素','版型','領型','材質/面料','風格感','圖案/花色'];
+    function mergeFeatureRules(rows, feature) {
+      return rows.reduce((acc, r) => {
+        acc.hot_count += Number(r.hot_count || 0);
+        acc.slow_count += Number(r.slow_count || 0);
+        acc.tag_group += ` ${r.tag_group || ''}`;
+        acc.tag_subtype += ` ${r.tag_subtype || ''}`;
+        return acc;
+      }, { feature, hot_count:0, slow_count:0, tag_group:'', tag_subtype:'' });
+    }
+    function aspectFromRule(rule, feature) {
+      const f = normalizeFeature(feature);
+      if (!isScoreableFeature(f)) return '';
+      const text = `${rule?.tag_group || ''} ${rule?.tag_subtype || ''} ${feature || ''}`.toUpperCase();
+      if (/印花|圖案|條紋|格紋|波點|圓點|點點|豹紋|字母|LOGO|滿版|花色/.test(text)) return '圖案/花色';
+      if (/V領|方領|圓領|U領|一字領|平口|翻領|領型|領口|立領|桃心領/.test(text)) return '領型';
+      if (/短袖|長袖|無袖|肩帶|細肩|寬肩|泡泡袖|落肩|削肩|袖型/.test(text)) return '';
+      if (/合身|寬鬆|A字|直筒|窄管|寬褲|高腰|低腰|傘襬|魚尾|喇叭|版型|修身|寬版/.test(text)) return '版型';
+      if (/針織|蕾絲|雪紡|棉|牛仔|皮革|皮衣|緞面|透膚|空氣層|毛呢|西裝|羅紋|網紗|材質|面料/.test(text)) return '材質/面料';
+      if (/甜美|辣妹|休閒|簡約|正式|度假|歐美|韓系|法式|氣質|性感|風格/.test(text)) return '風格感';
+      return '設計元素';
+    }
+    function aspectFromDetectedFeature(feature) {
+      const f = normalizeFeature(feature);
+      if (!isScoreableFeature(f)) return '';
+      return aspectFromRule({ tag_group:'', tag_subtype:'' }, f);
+    }
+    function scoreAspectRows(item) {
+      const picked = new Map();
+      const ruleRows = rulesFor(item.category);
+      for (const rawFeature of item.features || []) {
+        const f = normalizeFeature(rawFeature);
+        if (!isScoreableFeature(f)) continue;
+        const matchedRules = ruleRows.filter(x => normalizeFeature(x.feature) === f);
+        if (!matchedRules.length) continue;
+        const r = mergeFeatureRules(matchedRules, f);
+        const aspect = aspectFromRule(r, f);
+        if (!aspect) continue;
+        const hotCount = Number(r.hot_count || 0);
+        const slowCount = Number(r.slow_count || 0);
+        const totalCount = Math.max(1, hotCount + slowCount);
+        const targetCount = hotCount >= slowCount ? hotCount : slowCount;
+        const sign = hotCount >= slowCount ? 1 : -1;
+        const rate = targetCount / totalCount;
+        const reliability = totalCount <= 2 ? 0.4 : totalCount <= 5 ? 0.6 : totalCount <= 10 ? 0.8 : 1;
+        const countWeight = targetCount <= 2 ? 1 : targetCount <= 5 ? 2 : targetCount <= 10 ? 3 : targetCount <= 20 ? 4 : 5;
+        const points = Math.round(rate * reliability * countWeight * 10) / 10;
+        const current = picked.get(aspect);
+        const row = { aspect, feature:f, sign, points, hotCount, slowCount, totalCount, rate, reliability, countWeight };
+        if (!current || row.points > current.points) picked.set(aspect, row);
+      }
+      for (const f of normalizeFeatureList(item.features || [])) {
+        if (!isScoreableFeature(f)) continue;
+        const aspect = aspectFromDetectedFeature(f);
+        if (aspect && !picked.has(aspect)) picked.set(aspect, { aspect, feature:f, sign:0, points:0, hotCount:0, slowCount:0, totalCount:0, rate:0, reliability:0, countWeight:0, detectedOnly:true });
+      }
+      return SCORE_ASPECTS.map(aspect => picked.get(aspect) || { aspect, feature:'未明顯命中', sign:0, points:0, hotCount:0, slowCount:0, totalCount:0, rate:0, reliability:0, countWeight:0 });
+    }
+    function scorePartHtml(rows) {
+      return `<div class="scoreBreakdown">${rows.map(r => {
+        const cls = r.sign > 0 ? 'hot' : r.sign < 0 ? 'slow' : 'neutral';
+        const val = r.sign > 0 ? `+${r.points}` : r.sign < 0 ? `-${r.points}` : '0';
+        const meta = r.totalCount ? `<br><span>熱${r.hotCount} / 滯${r.slowCount}；可信${Math.round(r.reliability*100)}%</span>` : (r.detectedOnly ? '<br><span>已辨識，未列入加扣分</span>' : '');
+        return `<div class="scorePart ${cls}"><b>${esc(r.aspect)}</b><br>${esc(r.feature)} <span>${val}</span>${meta}</div>`;
+      }).join('')}</div>`;
+    }
+    function scoreItem(item) {
+      let score = 5;
+      const notes = [];
+      item.features = normalizeFeatureList([...(item.features || []), item.title || '', item.name || '', item.middleCategory || '']);
+      const labels = (activeBranch.labelsByCode[item.code] || []).filter(x => !x.channel || x.channel === activeChannel);
+      const aspectRows = scoreAspectRows(item);
+      const hotAspectCount = aspectRows.filter(x => x.sign > 0).length;
+      const slowAspectCount = aspectRows.filter(x => x.sign < 0).length;
+      const weightedDelta = aspectRows.reduce((sum, x) => sum + (x.sign * (x.points || 0)), 0);
+      score += weightedDelta;
+      if (labels.length) {
+        const hot = labels.filter(x => x.label.includes('暢銷')).length;
+        const slow = labels.filter(x => x.label.includes('滯銷')).length;
+        score += Math.max(-1, Math.min(1, (hot - slow) * 0.5));
+        notes.push(`歷史標籤：${labels.map(x => x.period + x.label).join('、')}`);
+      }
+      if (item.summary) notes.push(item.summary);
+      const hotSimilar = similarItems(item, '暢銷');
+      const slowSimilar = similarItems(item, '滯銷');
+      score += Math.min(1, hotSimilar.length * 0.5) - Math.min(1, slowSimilar.length * 0.5);
+      notes.push(`加權面向：暢銷命中 ${hotAspectCount} 個、滯銷命中 ${slowAspectCount} 個、中性/未命中 ${SCORE_ASPECTS.length - hotAspectCount - slowAspectCount} 個；面向合計 ${weightedDelta >= 0 ? '+' : ''}${Math.round(weightedDelta * 10) / 10} 分。`);
+      if (hotSimilar.length) notes.push(`類似暢銷款：${formatSimilar(hotSimilar)}`);
+      if (slowSimilar.length) notes.push(`類似滯銷款：${formatSimilar(slowSimilar)}`);
+      score = Math.max(1, Math.min(10, Math.round(score * 10) / 10));
+      const decision = score >= 8 ? ['立即開發','good'] : score >= 6.5 ? ['觀察後開發','watch'] : ['不建議開發','bad'];
+      return { score, decision, notes: notes.join('\n') || '等待圖片分析。', hotSimilar, slowSimilar, aspectRows };
+    }
+    function renderResults() {
+      if (!state.length) {
+        els.results.innerHTML = '<div class="empty">尚未上傳參考圖片。</div>';
+        return;
+      }
+      els.results.innerHTML = state.map(item => {
+        if (item.kind === 'reference') {
+          return `<article class="itemCard">
+            <img class="thumb" src="${item.url}" alt="">
+            <div>
+              <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">參考圖片 ${esc(item.category || '待辨識')} / ${item.analyzed ? '已分析' : '等待生成'}</div></div><div class="score warn">參考</div></div>
+              <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
+              <div class="small">${esc(item.summary || '按生成延伸款式後，AI 會先分析這張圖，再產生延伸款。')}</div>
+            </div>
+          </article>`;
+        }
+        if (!item.analyzed) {
+          return `<article class="itemCard generated">
+            <img class="thumb" src="${item.url}" alt="">
+            <div>
+              <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI 延伸款待評分</div></div><div class="score warn">待</div></div>
+              <div class="small">AI 正在生成與評分。</div>
+            </div>
+          </article>`;
+        }
+        const s = scoreItem(item);
+        return `<article class="itemCard generated">
+          <img class="thumb" src="${item.url}" alt="">
+          <div>
+            <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI 延伸款 ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI生成')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
+            <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
+            <div class="extensionReason"><b>保留：</b>${esc((item.kept || []).join('、') || '依參考款核心賣點')}<br><b>新增：</b>${esc((item.added || []).join('、') || '跨品類延伸')}<br><b>原因：</b>${esc(item.reason || item.summary || '')}</div>
+            ${scorePartHtml(s.aspectRows)}
+            <div class="small">${esc(s.notes)}</div>
+            <div class="similarRefs">${s.hotSimilar.map(x => refCard(x, 'hot')).join('')}${s.slowSimilar.map(x => refCard(x, 'slow')).join('')}</div>
+            <div class="decision"><b class="${s.decision[1]}">${s.decision[0]}</b><button class="secondary" type="button">加入報表</button></div>
+          </div>
+        </article>`;
+      }).join('');
+    }
+    function extensionFactorsText() {
+      const factorCards = activeBranch.categoryCardsByChannel?.[activeChannel] || activeBranch.categoryCards || [];
+      return factorCards.map(c => `${c.category} 熱銷:${c.hotFactors.map(x=>x.feature).join('、')}；滯銷:${c.slowFactors.map(x=>x.feature).join('、')}`).join('\n');
+    }
+    async function generateExtensions() {
+      const references = state.filter(x => x.kind === 'reference');
+      if (!references.length) {
+        els.status.textContent = '請先上傳參考圖片。';
+        return;
+      }
+      const changedBranch = applyBranchFromNote();
+      syncKnownItemsToActiveBranch();
+      if (changedBranch) renderAll();
+      const generated = [];
+      document.getElementById('analyzeBtn').disabled = true;
+      for (let i=0; i<references.length; i++) {
+        const ref = references[i];
+        try {
+          els.status.textContent = `AI 正在分析並生成 ${i+1} / ${references.length}：${ref.name}`;
+          const res = await fetch('/api/extend-style', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              branchName: activeBranch.name,
+              channel: activeChannel,
+              categories: activeBranch.categories,
+              factorText: extensionFactorsText(),
+              note: els.note.value || '',
+              imageDataUrl: ref.dataUrl
+            })
+          });
+          const raw = await res.text();
+          let data = {};
+          try { data = raw ? JSON.parse(raw) : {}; }
+          catch { throw new Error('後端回傳不是 JSON，請確認 server.mjs 已更新並重新部署。'); }
+          if (!res.ok) throw new Error(data.error || 'AI 生成失敗');
+          ref.analyzed = true;
+          ref.title = data.analysis?.title || ref.title;
+          ref.category = data.analysis?.category || ref.category;
+          ref.middleCategory = data.analysis?.middleCategory || ref.middleCategory;
+          ref.features = normalizeFeatureList(data.analysis?.features || []);
+          ref.summary = data.analysis?.summary || '';
+          (data.variants || []).forEach((v, idx) => {
+            generated.push({
+              kind:'generated', name:v.title || `延伸款 ${idx+1}`, title:v.title || `延伸款 ${idx+1}`,
+              url:v.imageDataUrl || ref.url, dataUrl:v.imageDataUrl || ref.dataUrl, code:'',
+              category: activeBranch.categories.includes(v.category) ? v.category : (v.category || ref.category || '上衣'),
+              middleCategory:v.middleCategory || '',
+              features:normalizeFeatureList(v.features || []), summary:v.summary || v.reason || '',
+              kept:v.kept || [], added:v.added || [], reason:v.reason || v.imageError || '', source:v.imageDataUrl ? 'AI生成' : '生成失敗使用參考圖', analyzed:true
+            });
+          });
+        } catch(err) {
+          ref.summary = 'AI 生成失敗：' + String(err.message || err).slice(0, 180);
+          ref.analyzed = true;
+        }
+        state.splice(0, state.length, ...references, ...generated);
+        renderResults();
+      }
+      document.getElementById('analyzeBtn').disabled = false;
+      els.status.textContent = `完成：分析 ${references.length} 張參考圖，產生 ${generated.length} 款延伸款，並依 ${activeBranch.name} 支線評分。`;
+    }
+    els.files.addEventListener('change', async () => {
+      state.splice(0, state.length);
+      for (const file of Array.from(els.files.files || [])) {
+        const dataUrl = await fileToDataUrl(file);
+        const code = detectCode(file.name);
+        const known = activeBranch.knownItems[code];
+        state.push({
+          kind:'reference', name:file.name, title: known?.name || file.name.replace(/\.[^.]+$/,''),
+          url:URL.createObjectURL(file), dataUrl, code,
+          category: known?.category || '上衣', middleCategory: known?.middleCategory || '', features: [], summary:'',
+          source: known ? '歷史款號' : '待分析', analyzed:false
+        });
+      }
+      const noteBranch = branchFromText(els.note.value);
+      els.status.textContent = noteBranch
+        ? `已選擇 ${state.length} 張圖片，偵測到將依 ${noteBranch} 支線評分。請輸入補充說明後按「分析上傳圖片」開始。`
+        : `已選擇 ${state.length} 張圖片。尚未分析；請輸入補充說明後按「分析上傳圖片」開始。`;
+      renderResults();
+    });
+    els.note.addEventListener('input', () => {
+      const noteBranch = branchFromText(els.note.value);
+      if (noteBranch) els.status.textContent = `已偵測補充說明指定 ${noteBranch} 支線；上傳圖片後按「分析上傳圖片」才會開始評分。`;
+    });
+    document.getElementById('analyzeBtn').onclick = generateExtensions;
+    els.chatBtn.onclick = askData;
+    els.chatResetBtn.onclick = resetChat;
+    els.chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') askData(); });
+    async function initApp() {
+      try {
+        const res = await fetch('data/app_data.json', {cache:'no-store'});
+        if (!res.ok) throw new Error('data/app_data.json 載入失敗');
+        APP = await res.json();
+        normalizeLoadedData();
+        activeBranch = APP.branches[0];
+        renderAll();
+      } catch (err) {
+        document.body.innerHTML = `<main style="padding:28px;font-family:Microsoft JhengHei,system-ui"><h1>資料載入失敗</h1><p>請確認 public/data/app_data.json 已上傳，且網站是用 Render/GitHub Pages 方式開啟。</p><p>${esc(err.message || err)}</p></main>`;
+      }
+    }
+    initApp();
+  </script>
+</body>
+</html>
