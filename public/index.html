@@ -51,17 +51,17 @@
     .small { color:var(--muted); font-size:13px; line-height:1.5; }
     .labelCols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .subhead { font-weight:800; font-size:13px; margin:8px 0; }
-    .uploadWorkspace { display:grid; grid-template-columns:1fr; gap:18px; align-items:start; }
+    .uploadWorkspace { display:block; }
     .uploadPanel { border-color:#c8c2b4; background:linear-gradient(135deg,#fffdf8,#ece4d4); box-shadow:0 14px 34px rgba(70,56,31,.10); }
     .uploadPanel { grid-column:1 / -1; }
-    .uploadTools { display:grid; grid-template-columns:minmax(280px,390px) minmax(220px,320px) minmax(420px,1fr) 180px; gap:16px; align-items:stretch; }
+    .uploadTools { display:grid; grid-template-columns:minmax(280px,390px) minmax(520px,1fr) 180px; gap:16px; align-items:stretch; }
     .drop { border:1px dashed #968871; border-radius:4px; padding:16px; background:#f4f1ea; margin:0; }
     .drop strong { display:block; margin-bottom:9px; }
     textarea { width:100%; min-height:190px; resize:vertical; margin:8px 0; line-height:1.6; }
     .apiRow { display:grid; grid-template-columns:1fr auto; gap:8px; margin:8px 0; }
     .status { color:var(--muted); font-size:13px; margin-top:8px; min-height:20px; }
-    .resultPanel { min-height:300px; background:#f4f1ea; }
-    .scoreGuide { grid-column:2; grid-row:2 / span 2; position:sticky; top:16px; border:1px solid #c8c2b4; border-radius:4px; padding:16px; background:#fffdf8; box-shadow:0 14px 34px rgba(70,56,31,.10); }
+    .resultPanel { min-height:300px; background:#f4f1ea; margin-top:18px; }
+    .scoreGuide { display:none; }
     .scoreGuide h3 { font-size:18px; margin-bottom:10px; }
     .scoreGuide ul { margin:8px 0 0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.65; }
     .scoreFormula { display:grid; gap:7px; margin-top:10px; }
@@ -69,8 +69,8 @@
     .cards { display:grid; gap:18px; }
     .referenceGroup { border:1px solid #c8c2b4; border-radius:4px; background:#fffdf8; padding:14px; }
     .referenceTitle { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; color:#315c91; font-weight:900; }
-    .referenceCard { display:grid; grid-template-columns:190px 1fr; gap:18px; border:2px solid #315c91; border-radius:4px; padding:14px; background:#eef4fb; margin-bottom:16px; }
-    .variantGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(430px,1fr)); gap:16px; align-items:start; }
+    .referenceCard { display:grid; grid-template-columns:210px 1fr; gap:18px; border:2px solid #315c91; border-radius:4px; padding:14px; background:#eef4fb; margin-bottom:16px; }
+    .variantGrid { display:flex; gap:16px; align-items:stretch; overflow-x:auto; padding-bottom:8px; }
     .itemCard { display:grid; grid-template-columns:190px 1fr; gap:18px; border:1px solid var(--line); border-radius:4px; padding:14px; background:#fffdf8; }
     .thumb { width:190px; height:250px; object-fit:cover; border-radius:7px; background:#eef2f6; }
     .itemTop { display:flex; justify-content:space-between; gap:8px; align-items:start; }
@@ -103,8 +103,8 @@
     .chatPic { width:132px; height:104px; border-radius:3px; background:linear-gradient(135deg,#e0dfdb,#fffdf8); border:1px solid #d0cfc6; object-fit:cover; display:grid; place-items:center; color:#625d58; font-size:12px; text-align:center; overflow:hidden; }
     .chatPic img { width:100%; height:100%; object-fit:cover; border-radius:3px; }
     .chatAsk { display:grid; grid-template-columns:1fr 92px 92px; gap:8px; }
-    .itemCard.generated .thumb { width:230px; height:310px; background:#eee9df; object-fit:cover; }
-    .itemCard.generated { grid-template-columns:230px 1fr; background:#fff1df; border:2px solid #315c91; }
+    .itemCard.generated .thumb { width:220px; height:300px; background:#eee9df; object-fit:cover; }
+    .itemCard.generated { grid-template-columns:220px 330px; min-width:590px; background:#fff1df; border:2px solid #315c91; }
     .extensionReason { margin:8px 0; padding:10px; border-left:4px solid var(--accent); background:#f4f1ea; color:#4d463d; line-height:1.6; }
     .empty { border:1px dashed var(--line); border-radius:4px; padding:28px; text-align:center; color:var(--muted); background:#fffdf8; }
     @media (max-width:1100px) { .app { grid-template-columns:1fr; } aside { position:static; } .uploadWorkspace,.uploadTools,.grid2,.catGrid { grid-template-columns:1fr; } .uploadPanel,.scoreGuide { grid-column:auto; grid-row:auto; position:static; } }
@@ -159,11 +159,6 @@
               <strong>上傳參考款式圖</strong>
               <div class="small">支援 JPG、PNG、WEBP。先分析參考圖，再依熱銷元素產生跨品類延伸款。</div>
               <input id="files" type="file" accept="image/*" multiple />
-            </div>
-            <div class="drop">
-              <strong>數字人參考圖</strong>
-              <div class="small" id="modelStatus">可放你的固定 AS 數字人，生成時會優先套用此模特兒。</div>
-              <input id="modelFile" type="file" accept="image/*" />
             </div>
               <div>
                 <label class="small"><b>改款延伸說明</b></label>
@@ -939,6 +934,31 @@
       const factorCards = activeBranch.categoryCardsByChannel?.[activeChannel] || activeBranch.categoryCards || [];
       return factorCards.map(c => `${c.category} 熱銷:${c.hotFactors.map(x=>x.feature).join('、')}；滯銷:${c.slowFactors.map(x=>x.feature).join('、')}`).join('\n');
     }
+    function categoryFromTextLabel(text) {
+      const t = String(text || '');
+      if (/褲子|長褲|短褲|寬褲|牛仔褲|喇叭褲|褲裙/.test(t)) return '褲子';
+      if (/洋裝|長洋|短洋|連身裙/.test(t)) return '洋裝';
+      if (/裙子|短裙|長裙|魚尾裙|蛋糕裙/.test(t)) return '裙子';
+      if (/外套|罩衫|針織外套|皮外套/.test(t)) return '外套';
+      if (/套裝|兩件式|內外套裝|上下套裝/.test(t)) return '套裝';
+      if (/上衣|背心|襯衫|罩杯|BRA|針織上衣/.test(t)) return '上衣';
+      return '';
+    }
+    function categoryOverrideForIndex(note, index) {
+      const n = index + 1;
+      const text = String(note || '').replace(/\s+/g, '');
+      const patterns = [
+        new RegExp(`圖片${n}(?:張|款)?(?:是|為|=)?([^，。,；;\\n]+)`),
+        new RegExp(`第${n}(?:張|款)?(?:是|為|=)?([^，。,；;\\n]+)`),
+        new RegExp(`${n}(?:是|為|=)([^，。,；;\\n]+)`)
+      ];
+      for (const pattern of patterns) {
+        const m = text.match(pattern);
+        const cat = m ? categoryFromTextLabel(m[1]) : '';
+        if (cat) return cat;
+      }
+      return '';
+    }
     async function generateExtensions() {
       const references = state.filter(x => x.kind === 'reference');
       if (!references.length) {
@@ -953,6 +973,13 @@
       for (let i=0; i<references.length; i++) {
         const ref = references[i];
         try {
+          const overrideCategory = categoryOverrideForIndex(els.note.value, i);
+          if (overrideCategory) ref.category = overrideCategory;
+          const enrichedNote = [
+            els.note.value || '',
+            `目前處理第 ${i + 1} 張 / 共 ${references.length} 張，檔名：${ref.name}`,
+            overrideCategory ? `使用者明確指定：第 ${i + 1} 張品類是「${overrideCategory}」，分析與生成必須以此品類為準。` : ''
+          ].filter(Boolean).join('\n');
           els.status.textContent = `AI 正在分析並生成 ${i+1} / ${references.length}：${ref.name}`;
           const res = await fetch('/api/extend-style', {
             method:'POST',
@@ -962,7 +989,8 @@
               channel: activeChannel,
               categories: activeBranch.categories,
               factorText: extensionFactorsText(),
-              note: els.note.value || '',
+              note: enrichedNote,
+              forcedCategory: overrideCategory,
               imageDataUrl: ref.dataUrl,
               modelDataUrl: modelReferenceDataUrl,
               variantCount: references.length > 1 ? 1 : 3
@@ -1017,30 +1045,32 @@
       }
       const noteBranch = branchFromText(els.note.value);
       els.status.textContent = noteBranch
-        ? `已選擇 ${state.length} 張圖片，偵測到將依 ${noteBranch} 支線評分。請輸入補充說明後按「分析上傳圖片」開始。`
-        : `已選擇 ${state.length} 張圖片。尚未分析；請輸入補充說明後按「分析上傳圖片」開始。`;
+        ? `已選擇 ${state.length} 張圖片，偵測到將依 ${noteBranch} 支線評分。請輸入改款說明後按「生成延伸款式」開始。`
+        : `已選擇 ${state.length} 張圖片。尚未分析；請輸入改款說明後按「生成延伸款式」開始。`;
       renderResults();
     });
-    els.modelFile.addEventListener('change', async () => {
-      const file = els.modelFile.files?.[0];
-      modelReferenceDataUrl = file ? await fileToDataUrl(file) : '';
-      if (modelReferenceDataUrl) {
-        try {
-          localStorage.setItem('airspace_ai3_model_reference', modelReferenceDataUrl);
-        } catch {
-          els.status.textContent = '數字人圖片太大，瀏覽器無法記住；本次仍可使用。';
-          return;
+    if (els.modelFile) {
+      els.modelFile.addEventListener('change', async () => {
+        const file = els.modelFile.files?.[0];
+        modelReferenceDataUrl = file ? await fileToDataUrl(file) : '';
+        if (modelReferenceDataUrl) {
+          try {
+            localStorage.setItem('airspace_ai3_model_reference', modelReferenceDataUrl);
+          } catch {
+            els.status.textContent = '數字人圖片太大，瀏覽器無法記住；本次仍可使用。';
+            return;
+          }
+        } else {
+          localStorage.removeItem('airspace_ai3_model_reference');
         }
-      } else {
-        localStorage.removeItem('airspace_ai3_model_reference');
-      }
-      els.status.textContent = modelReferenceDataUrl
-        ? '已載入數字人參考圖；生成時會優先套用此模特兒。'
-        : '已清除數字人參考圖。';
-    });
+        els.status.textContent = modelReferenceDataUrl
+          ? '已載入數字人參考圖；生成時會優先套用此模特兒。'
+          : '已清除數字人參考圖。';
+      });
+    }
     els.note.addEventListener('input', () => {
       const noteBranch = branchFromText(els.note.value);
-      if (noteBranch) els.status.textContent = `已偵測補充說明指定 ${noteBranch} 支線；上傳圖片後按「分析上傳圖片」才會開始評分。`;
+      if (noteBranch) els.status.textContent = `已偵測補充說明指定 ${noteBranch} 支線；上傳圖片後按「生成延伸款式」才會開始。`;
     });
     document.getElementById('analyzeBtn').onclick = generateExtensions;
     if (els.chatBtn && els.chatResetBtn && els.chatInput) {

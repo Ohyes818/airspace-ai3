@@ -1,6 +1,6 @@
-services:
+﻿services:
   - type: web
-    name: airspace-style-extension-web
+    name: airspace-ai3-style-extension-web
     env: node
     plan: starter
     buildCommand: npm install
@@ -12,3 +12,4 @@ services:
         value: gpt-4.1-mini
       - key: OPENAI_IMAGE_MODEL
         value: gpt-image-1
+

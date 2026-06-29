@@ -1,5 +1,5 @@
-{
-  "name": "airspace-style-extension-web",
+﻿{
+  "name": "airspace-ai3-style-extension-web",
   "version": "1.0.0",
   "type": "module",
   "private": true,
@@ -10,3 +10,4 @@
     "node": ">=20"
   }
 }
+

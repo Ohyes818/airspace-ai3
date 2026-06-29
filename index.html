@@ -51,24 +51,28 @@
     .small { color:var(--muted); font-size:13px; line-height:1.5; }
     .labelCols { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
     .subhead { font-weight:800; font-size:13px; margin:8px 0; }
-    .uploadWorkspace { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:18px; align-items:start; }
+    .uploadWorkspace { display:block; }
     .uploadPanel { border-color:#c8c2b4; background:linear-gradient(135deg,#fffdf8,#ece4d4); box-shadow:0 14px 34px rgba(70,56,31,.10); }
     .uploadPanel { grid-column:1 / -1; }
-    .uploadTools { display:grid; grid-template-columns:minmax(320px,460px) 1fr 180px; gap:16px; align-items:end; }
+    .uploadTools { display:grid; grid-template-columns:minmax(280px,390px) minmax(520px,1fr) 180px; gap:16px; align-items:stretch; }
     .drop { border:1px dashed #968871; border-radius:4px; padding:16px; background:#f4f1ea; margin:0; }
     .drop strong { display:block; margin-bottom:9px; }
-    textarea { width:100%; min-height:120px; resize:vertical; margin:8px 0; }
+    textarea { width:100%; min-height:190px; resize:vertical; margin:8px 0; line-height:1.6; }
     .apiRow { display:grid; grid-template-columns:1fr auto; gap:8px; margin:8px 0; }
     .status { color:var(--muted); font-size:13px; margin-top:8px; min-height:20px; }
-    .resultPanel { min-height:300px; background:#f4f1ea; }
-    .scoreGuide { grid-column:2; grid-row:2 / span 2; position:sticky; top:16px; border:1px solid #c8c2b4; border-radius:4px; padding:16px; background:#fffdf8; box-shadow:0 14px 34px rgba(70,56,31,.10); }
+    .resultPanel { min-height:300px; background:#f4f1ea; margin-top:18px; }
+    .scoreGuide { display:none; }
     .scoreGuide h3 { font-size:18px; margin-bottom:10px; }
     .scoreGuide ul { margin:8px 0 0; padding-left:18px; color:var(--muted); font-size:13px; line-height:1.65; }
     .scoreFormula { display:grid; gap:7px; margin-top:10px; }
     .scoreFormula div { display:flex; justify-content:space-between; gap:8px; border-bottom:1px solid #e0dfdb; padding-bottom:6px; font-size:13px; }
-    .cards { display:grid; gap:12px; }
-    .itemCard { display:grid; grid-template-columns:110px 1fr; gap:12px; border:1px solid var(--line); border-radius:4px; padding:10px; background:#fffdf8; }
-    .thumb { width:110px; height:140px; object-fit:cover; border-radius:7px; background:#eef2f6; }
+    .cards { display:grid; gap:18px; }
+    .referenceGroup { border:1px solid #c8c2b4; border-radius:4px; background:#fffdf8; padding:14px; }
+    .referenceTitle { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; color:#315c91; font-weight:900; }
+    .referenceCard { display:grid; grid-template-columns:210px 1fr; gap:18px; border:2px solid #315c91; border-radius:4px; padding:14px; background:#eef4fb; margin-bottom:16px; }
+    .variantGrid { display:flex; gap:16px; align-items:stretch; overflow-x:auto; padding-bottom:8px; }
+    .itemCard { display:grid; grid-template-columns:190px 1fr; gap:18px; border:1px solid var(--line); border-radius:4px; padding:14px; background:#fffdf8; }
+    .thumb { width:190px; height:250px; object-fit:cover; border-radius:7px; background:#eef2f6; }
     .itemTop { display:flex; justify-content:space-between; gap:8px; align-items:start; }
     .score { font-size:22px; font-weight:900; color:#fff; background:var(--brand); min-width:54px; text-align:center; border-radius:8px; padding:8px 9px; }
     .score.good { background:var(--good); }
@@ -99,7 +103,8 @@
     .chatPic { width:132px; height:104px; border-radius:3px; background:linear-gradient(135deg,#e0dfdb,#fffdf8); border:1px solid #d0cfc6; object-fit:cover; display:grid; place-items:center; color:#625d58; font-size:12px; text-align:center; overflow:hidden; }
     .chatPic img { width:100%; height:100%; object-fit:cover; border-radius:3px; }
     .chatAsk { display:grid; grid-template-columns:1fr 92px 92px; gap:8px; }
-    .itemCard.generated .thumb { background:#eee9df; object-fit:cover; }
+    .itemCard.generated .thumb { width:220px; height:300px; background:#eee9df; object-fit:cover; }
+    .itemCard.generated { grid-template-columns:220px 330px; min-width:590px; background:#fff1df; border:2px solid #315c91; }
     .extensionReason { margin:8px 0; padding:10px; border-left:4px solid var(--accent); background:#f4f1ea; color:#4d463d; line-height:1.6; }
     .empty { border:1px dashed var(--line); border-radius:4px; padding:28px; text-align:center; color:var(--muted); background:#fffdf8; }
     @media (max-width:1100px) { .app { grid-template-columns:1fr; } aside { position:static; } .uploadWorkspace,.uploadTools,.grid2,.catGrid { grid-template-columns:1fr; } .uploadPanel,.scoreGuide { grid-column:auto; grid-row:auto; position:static; } }
@@ -189,18 +194,6 @@
               <li>未出現在目前支線/通路/品類因素中的標籤不計分</li>
             </ul>
           </aside>
-          <div class="chatBox">
-            <div class="chatHead">
-              <b>AI 資料問答</b>
-              <span class="small">總銷/累銷查 Excel；熱銷/滯銷查四週標籤</span>
-            </div>
-            <div id="chatLog" class="chatLog"><div class="chatMsg">可以問：總銷超過500件的皮外套有哪些、熱銷皮外套有哪些、AS 滯銷蕾絲洋裝。問「總銷/累銷」會查 Excel；問「熱銷/滯銷」會查四週標籤。</div></div>
-            <div class="chatAsk">
-              <input id="chatInput" type="text" placeholder="輸入問題，例如：總銷超過500件的皮外套有哪些" />
-              <button id="chatBtn" type="button">詢問</button>
-              <button id="chatResetBtn" type="button" class="secondary">重問</button>
-            </div>
-          </div>
         </div>
       </section>
     </main>
@@ -210,6 +203,8 @@
     let activeBranch = null;
     let activeChannel = '總';
     const state = [];
+    let modelReferenceDataUrl = localStorage.getItem('airspace_ai3_model_reference') || '';
+    const developmentList = JSON.parse(localStorage.getItem('airspace_ai3_development_list') || '[]');
     const chatMemory = { lastRows: [], lastQuestion: '', lastMode: '', lastScope: '全部支線' };
     const els = {
       branches: document.getElementById('branches'),
@@ -219,6 +214,8 @@
       overallSlow: document.getElementById('overallSlow'),
       categoryCards: document.getElementById('categoryCards'),
       files: document.getElementById('files'),
+      modelFile: document.getElementById('modelFile'),
+      modelStatus: document.getElementById('modelStatus'),
       note: document.getElementById('note'),
       results: document.getElementById('results'),
       status: document.getElementById('status'),
@@ -879,49 +876,88 @@
       const decision = score >= 8 ? ['立即開發','good'] : score >= 6.5 ? ['觀察後開發','watch'] : ['不建議開發','bad'];
       return { score, decision, notes: notes.join('\n') || '等待圖片分析。', hotSimilar, slowSimilar, aspectRows };
     }
+    function isInDevelopment(uid) {
+      return developmentList.some(x => x.uid === uid);
+    }
+    window.addDevelopment = function(uid) {
+      const item = state.find(x => x.uid === uid);
+      if (!item || isInDevelopment(uid)) return;
+      developmentList.push({
+        uid:item.uid, title:item.title || item.name, category:item.category, middleCategory:item.middleCategory,
+        features:item.features || [], image:item.url, reason:item.reason || item.summary || '', createdAt:new Date().toISOString()
+      });
+      localStorage.setItem('airspace_ai3_development_list', JSON.stringify(developmentList.slice(-200)));
+      renderResults();
+    }
+    function renderGeneratedCard(item) {
+      const s = scoreItem(item);
+      const added = isInDevelopment(item.uid);
+      return `<article class="itemCard generated">
+        <img class="thumb" src="${item.url}" alt="">
+        <div>
+          <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI 延伸款 ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI生成')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
+          <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
+          <div class="extensionReason"><b>保留：</b>${esc((item.kept || []).join('、') || '依參考款核心賣點')}<br><b>新增：</b>${esc((item.added || []).join('、') || '跨品類延伸')}<br><b>原因：</b>${esc(item.reason || item.summary || '')}</div>
+          ${scorePartHtml(s.aspectRows)}
+          <div class="small">${esc(s.notes)}</div>
+          <div class="similarRefs">${s.hotSimilar.map(x => refCard(x, 'hot')).join('')}${s.slowSimilar.map(x => refCard(x, 'slow')).join('')}</div>
+          <div class="decision"><b class="${s.decision[1]}">${s.decision[0]}</b><button class="secondary" type="button" onclick="addDevelopment('${esc(item.uid)}')">${added ? '已加入待開發' : '加入待開發'}</button></div>
+        </div>
+      </article>`;
+    }
+    function renderReferenceGroup(ref, generatedItems) {
+      return `<section class="referenceGroup">
+        <div class="referenceTitle"><span>原始款式與延伸結果</span><span class="small">${generatedItems.length ? `${generatedItems.length} 款延伸` : '等待生成'}</span></div>
+        <article class="referenceCard">
+          <img class="thumb" src="${ref.url}" alt="">
+          <div>
+            <div class="itemTop"><div><b>${esc(ref.title || ref.name)}</b><div class="small">你上傳的款式圖 ${esc(ref.category || '待辨識')} / ${ref.analyzed ? '已分析' : '等待生成'}</div></div><div class="score warn">原圖</div></div>
+            <div class="tags">${(ref.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
+            <div class="small">${esc(ref.summary || '按生成延伸款式後，AI 會先分析這張圖，再產生延伸款。')}</div>
+          </div>
+        </article>
+        <div class="variantGrid">${generatedItems.length ? generatedItems.map(renderGeneratedCard).join('') : '<div class="empty">此款尚未產生延伸款。</div>'}</div>
+      </section>`;
+    }
     function renderResults() {
       if (!state.length) {
         els.results.innerHTML = '<div class="empty">尚未上傳參考圖片。</div>';
         return;
       }
-      els.results.innerHTML = state.map(item => {
-        if (item.kind === 'reference') {
-          return `<article class="itemCard">
-            <img class="thumb" src="${item.url}" alt="">
-            <div>
-              <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">參考圖片 ${esc(item.category || '待辨識')} / ${item.analyzed ? '已分析' : '等待生成'}</div></div><div class="score warn">參考</div></div>
-              <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
-              <div class="small">${esc(item.summary || '按生成延伸款式後，AI 會先分析這張圖，再產生延伸款。')}</div>
-            </div>
-          </article>`;
-        }
-        if (!item.analyzed) {
-          return `<article class="itemCard generated">
-            <img class="thumb" src="${item.url}" alt="">
-            <div>
-              <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI 延伸款待評分</div></div><div class="score warn">待</div></div>
-              <div class="small">AI 正在生成與評分。</div>
-            </div>
-          </article>`;
-        }
-        const s = scoreItem(item);
-        return `<article class="itemCard generated">
-          <img class="thumb" src="${item.url}" alt="">
-          <div>
-            <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI 延伸款 ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI生成')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
-            <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
-            <div class="extensionReason"><b>保留：</b>${esc((item.kept || []).join('、') || '依參考款核心賣點')}<br><b>新增：</b>${esc((item.added || []).join('、') || '跨品類延伸')}<br><b>原因：</b>${esc(item.reason || item.summary || '')}</div>
-            ${scorePartHtml(s.aspectRows)}
-            <div class="small">${esc(s.notes)}</div>
-            <div class="similarRefs">${s.hotSimilar.map(x => refCard(x, 'hot')).join('')}${s.slowSimilar.map(x => refCard(x, 'slow')).join('')}</div>
-            <div class="decision"><b class="${s.decision[1]}">${s.decision[0]}</b><button class="secondary" type="button">加入報表</button></div>
-          </div>
-        </article>`;
+      const refs = state.filter(x => x.kind === 'reference');
+      els.results.innerHTML = refs.map(ref => {
+        const generatedItems = state.filter(x => x.kind === 'generated' && x.parentId === ref.uid);
+        return renderReferenceGroup(ref, generatedItems);
       }).join('');
     }
     function extensionFactorsText() {
       const factorCards = activeBranch.categoryCardsByChannel?.[activeChannel] || activeBranch.categoryCards || [];
       return factorCards.map(c => `${c.category} 熱銷:${c.hotFactors.map(x=>x.feature).join('、')}；滯銷:${c.slowFactors.map(x=>x.feature).join('、')}`).join('\n');
+    }
+    function categoryFromTextLabel(text) {
+      const t = String(text || '');
+      if (/褲子|長褲|短褲|寬褲|牛仔褲|喇叭褲|褲裙/.test(t)) return '褲子';
+      if (/洋裝|長洋|短洋|連身裙/.test(t)) return '洋裝';
+      if (/裙子|短裙|長裙|魚尾裙|蛋糕裙/.test(t)) return '裙子';
+      if (/外套|罩衫|針織外套|皮外套/.test(t)) return '外套';
+      if (/套裝|兩件式|內外套裝|上下套裝/.test(t)) return '套裝';
+      if (/上衣|背心|襯衫|罩杯|BRA|針織上衣/.test(t)) return '上衣';
+      return '';
+    }
+    function categoryOverrideForIndex(note, index) {
+      const n = index + 1;
+      const text = String(note || '').replace(/\s+/g, '');
+      const patterns = [
+        new RegExp(`圖片${n}(?:張|款)?(?:是|為|=)?([^，。,；;\\n]+)`),
+        new RegExp(`第${n}(?:張|款)?(?:是|為|=)?([^，。,；;\\n]+)`),
+        new RegExp(`${n}(?:是|為|=)([^，。,；;\\n]+)`)
+      ];
+      for (const pattern of patterns) {
+        const m = text.match(pattern);
+        const cat = m ? categoryFromTextLabel(m[1]) : '';
+        if (cat) return cat;
+      }
+      return '';
     }
     async function generateExtensions() {
       const references = state.filter(x => x.kind === 'reference');
@@ -937,6 +973,13 @@
       for (let i=0; i<references.length; i++) {
         const ref = references[i];
         try {
+          const overrideCategory = categoryOverrideForIndex(els.note.value, i);
+          if (overrideCategory) ref.category = overrideCategory;
+          const enrichedNote = [
+            els.note.value || '',
+            `目前處理第 ${i + 1} 張 / 共 ${references.length} 張，檔名：${ref.name}`,
+            overrideCategory ? `使用者明確指定：第 ${i + 1} 張品類是「${overrideCategory}」，分析與生成必須以此品類為準。` : ''
+          ].filter(Boolean).join('\n');
           els.status.textContent = `AI 正在分析並生成 ${i+1} / ${references.length}：${ref.name}`;
           const res = await fetch('/api/extend-style', {
             method:'POST',
@@ -946,8 +989,11 @@
               channel: activeChannel,
               categories: activeBranch.categories,
               factorText: extensionFactorsText(),
-              note: els.note.value || '',
-              imageDataUrl: ref.dataUrl
+              note: enrichedNote,
+              forcedCategory: overrideCategory,
+              imageDataUrl: ref.dataUrl,
+              modelDataUrl: modelReferenceDataUrl,
+              variantCount: references.length > 1 ? 1 : 3
             })
           });
           const raw = await res.text();
@@ -963,6 +1009,8 @@
           ref.summary = data.analysis?.summary || '';
           (data.variants || []).forEach((v, idx) => {
             generated.push({
+              uid:`gen_${ref.uid}_${idx}_${Date.now()}`,
+              parentId:ref.uid,
               kind:'generated', name:v.title || `延伸款 ${idx+1}`, title:v.title || `延伸款 ${idx+1}`,
               url:v.imageDataUrl || ref.url, dataUrl:v.imageDataUrl || ref.dataUrl, code:'',
               category: activeBranch.categories.includes(v.category) ? v.category : (v.category || ref.category || '上衣'),
@@ -988,6 +1036,7 @@
         const code = detectCode(file.name);
         const known = activeBranch.knownItems[code];
         state.push({
+          uid:`ref_${Date.now()}_${Math.random().toString(36).slice(2)}`,
           kind:'reference', name:file.name, title: known?.name || file.name.replace(/\.[^.]+$/,''),
           url:URL.createObjectURL(file), dataUrl, code,
           category: known?.category || '上衣', middleCategory: known?.middleCategory || '', features: [], summary:'',
@@ -996,20 +1045,44 @@
       }
       const noteBranch = branchFromText(els.note.value);
       els.status.textContent = noteBranch
-        ? `已選擇 ${state.length} 張圖片，偵測到將依 ${noteBranch} 支線評分。請輸入補充說明後按「分析上傳圖片」開始。`
-        : `已選擇 ${state.length} 張圖片。尚未分析；請輸入補充說明後按「分析上傳圖片」開始。`;
+        ? `已選擇 ${state.length} 張圖片，偵測到將依 ${noteBranch} 支線評分。請輸入改款說明後按「生成延伸款式」開始。`
+        : `已選擇 ${state.length} 張圖片。尚未分析；請輸入改款說明後按「生成延伸款式」開始。`;
       renderResults();
     });
+    if (els.modelFile) {
+      els.modelFile.addEventListener('change', async () => {
+        const file = els.modelFile.files?.[0];
+        modelReferenceDataUrl = file ? await fileToDataUrl(file) : '';
+        if (modelReferenceDataUrl) {
+          try {
+            localStorage.setItem('airspace_ai3_model_reference', modelReferenceDataUrl);
+          } catch {
+            els.status.textContent = '數字人圖片太大，瀏覽器無法記住；本次仍可使用。';
+            return;
+          }
+        } else {
+          localStorage.removeItem('airspace_ai3_model_reference');
+        }
+        els.status.textContent = modelReferenceDataUrl
+          ? '已載入數字人參考圖；生成時會優先套用此模特兒。'
+          : '已清除數字人參考圖。';
+      });
+    }
     els.note.addEventListener('input', () => {
       const noteBranch = branchFromText(els.note.value);
-      if (noteBranch) els.status.textContent = `已偵測補充說明指定 ${noteBranch} 支線；上傳圖片後按「分析上傳圖片」才會開始評分。`;
+      if (noteBranch) els.status.textContent = `已偵測補充說明指定 ${noteBranch} 支線；上傳圖片後按「生成延伸款式」才會開始。`;
     });
     document.getElementById('analyzeBtn').onclick = generateExtensions;
-    els.chatBtn.onclick = askData;
-    els.chatResetBtn.onclick = resetChat;
-    els.chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') askData(); });
+    if (els.chatBtn && els.chatResetBtn && els.chatInput) {
+      els.chatBtn.onclick = askData;
+      els.chatResetBtn.onclick = resetChat;
+      els.chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') askData(); });
+    }
     async function initApp() {
       try {
+        if (els.modelStatus && modelReferenceDataUrl) {
+          els.modelStatus.textContent = '已記住你的 AS 數字人；若要更換，再重新選檔即可。';
+        }
         const res = await fetch('data/app_data.json', {cache:'no-store'});
         if (!res.ok) throw new Error('data/app_data.json 載入失敗');
         APP = await res.json();

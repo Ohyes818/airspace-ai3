@@ -117,6 +117,36 @@ async function callOpenAiJson(messages) {
   return safeJson(data.choices?.[0]?.message?.content);
 }
 
+function dataUrlToBlob(dataUrl, fallbackType = "image/png") {
+  const match = String(dataUrl || "").match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) return null;
+  const bytes = Buffer.from(match[2], "base64");
+  return new Blob([bytes], { type: match[1] || fallbackType });
+}
+
+async function editImage(prompt, productDataUrl, modelDataUrl) {
+  const form = new FormData();
+  form.append("model", process.env.OPENAI_IMAGE_MODEL || "gpt-image-1");
+  form.append("prompt", prompt);
+  form.append("size", process.env.OPENAI_IMAGE_SIZE || "1024x1024");
+  const productBlob = dataUrlToBlob(productDataUrl);
+  const modelBlob = dataUrlToBlob(modelDataUrl);
+  if (productBlob) form.append("image", productBlob, "product-reference.png");
+  if (modelBlob) form.append("image", modelBlob, "as-digital-human-reference.png");
+
+  const response = await fetch("https://api.openai.com/v1/images/edits", {
+    method: "POST",
+    headers: { "Authorization": `Bearer ${apiKey()}` },
+    body: form
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error?.message || `OpenAI 參考圖生成失敗 HTTP ${response.status}`);
+  const item = data.data?.[0] || {};
+  if (item.b64_json) return `data:image/png;base64,${item.b64_json}`;
+  if (item.url) return item.url;
+  throw new Error("OpenAI 沒有回傳圖片。");
+}
+
 async function generateImage(prompt) {
   const response = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -144,18 +174,22 @@ async function analyzeImage(payload) {
   const categories = Array.isArray(payload.categories) ? payload.categories : [];
   const factorText = payload.factorText || "";
   const note = payload.note || "";
+  const forcedCategory = payload.forcedCategory || "";
   const prompt = `
 你是 AIR SPACE 商品企劃與服裝設計分析助手。
 目前支線：${branchName}
 可用大品類：${categories.join("、")}
 使用者補充說明：${note || "無"}
+使用者指定品類：${forcedCategory || "無"}
 目前暢滯銷標籤摘要：
 ${factorText || "無"}
 
 ${extensionRules}
 
-請依圖片先判斷原商品，再提出 3 款最值得生成的改款延伸。
+請依圖片先判斷原商品，再提出 ${Number(payload.variantCount || 3)} 款最值得生成的改款延伸。
 每款優先跨品類延伸，但不得失去原商品高分賣點。
+每款 title、category、middleCategory 必須與生成 prompt 完全一致。例如 category 是洋裝，prompt 必須描述一件完整洋裝，不可只生成上衣或背心；category 是外套，必須是外套；category 是褲子，必須是褲裝。
+如果「使用者指定品類」不是無，analysis.category 必須等於該指定品類，且延伸方向也必須從該品類出發，不可自行改判成套裝或其他品類。
 
 只回傳 JSON，不要 Markdown。格式：
 {
@@ -191,7 +225,8 @@ ${extensionRules}
     }
   ]);
 
-  const variants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, 3) : [];
+  const count = Math.max(1, Math.min(3, Number(payload.variantCount || 3)));
+  const variants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, count) : [];
   return {
     analysis: parsed.analysis || {},
     variants
@@ -204,7 +239,13 @@ async function extendStyle(payload) {
   const variants = [];
   for (const [index, variant] of analyzed.variants.entries()) {
     const imagePrompt = [
-      "Create a clean ecommerce fashion product photo of one full-body female model wearing the new AIR SPACE derived style.",
+      "Create a clean ecommerce fashion product photo of one full-body female AS digital human model wearing the new AIR SPACE derived style.",
+      "Model direction: use a consistent virtual model similar to a blonde western fashion fitting model, fair skin, slim 170cm proportion, clean modern commercial look, inspired by Hailey Rhode Bieber's minimal beauty direction but do not imitate or recreate any real person.",
+      payload.modelDataUrl ? "Use the uploaded AS digital human reference image as the primary model identity reference. Keep the same virtual model face direction, hair color, body proportion, clean fitting-model temperament, and studio catalog feeling." : "",
+      "Use the uploaded product image as the garment design reference. Preserve the high scoring garment elements, silhouette, material feeling, and core details before extending into the new category.",
+      "The generated garment must exactly match the variant category and title. If the variant says dress, show a complete one-piece dress from shoulder to hem. If it says top, show a top. If it says outerwear, show outerwear. Do not output a cropped top when the title/category says dress.",
+      "Show the complete garment clearly, full body, not a close-up crop. Keep the full hem, sleeve, neckline, waist and silhouette visible.",
+      "Use a plain white or warm off-white studio background, full-body front pose, natural standing posture, clear garment details, premium online shop catalog lighting.",
       "Keep the original product's strongest selling points and visual identity, but make it a new commercially viable design.",
       "No text, no logo, no collage, no layout board, no watermark.",
       `Original analysis: ${JSON.stringify(original)}`,
@@ -212,7 +253,10 @@ async function extendStyle(payload) {
       `Generation prompt: ${variant.prompt || ""}`
     ].join("\n");
     try {
-      variants.push({ ...variant, imageDataUrl: await generateImage(imagePrompt) });
+      const imageDataUrl = payload.modelDataUrl
+        ? await editImage(imagePrompt, payload.imageDataUrl, payload.modelDataUrl)
+        : await generateImage(imagePrompt);
+      variants.push({ ...variant, imageDataUrl });
     } catch (error) {
       variants.push({ ...variant, imageError: error.message || String(error) });
     }
