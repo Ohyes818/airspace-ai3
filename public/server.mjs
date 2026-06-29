@@ -186,6 +186,7 @@ ${extensionRules}
 
 請依圖片先判斷原商品，再提出 ${Number(payload.variantCount || 3)} 款最值得生成的改款延伸。
 每款優先跨品類延伸，但不得失去原商品高分賣點。
+每款 title、category、middleCategory 必須與生成 prompt 完全一致。例如 category 是洋裝，prompt 必須描述一件完整洋裝，不可只生成上衣或背心；category 是外套，必須是外套；category 是褲子，必須是褲裝。
 
 只回傳 JSON，不要 Markdown。格式：
 {
@@ -239,6 +240,8 @@ async function extendStyle(payload) {
       "Model direction: use a consistent virtual model similar to a blonde western fashion fitting model, fair skin, slim 170cm proportion, clean modern commercial look, inspired by Hailey Rhode Bieber's minimal beauty direction but do not imitate or recreate any real person.",
       payload.modelDataUrl ? "Use the uploaded AS digital human reference image as the primary model identity reference. Keep the same virtual model face direction, hair color, body proportion, clean fitting-model temperament, and studio catalog feeling." : "",
       "Use the uploaded product image as the garment design reference. Preserve the high scoring garment elements, silhouette, material feeling, and core details before extending into the new category.",
+      "The generated garment must exactly match the variant category and title. If the variant says dress, show a complete one-piece dress from shoulder to hem. If it says top, show a top. If it says outerwear, show outerwear. Do not output a cropped top when the title/category says dress.",
+      "Show the complete garment clearly, full body, not a close-up crop. Keep the full hem, sleeve, neckline, waist and silhouette visible.",
       "Use a plain white or warm off-white studio background, full-body front pose, natural standing posture, clear garment details, premium online shop catalog lighting.",
       "Keep the original product's strongest selling points and visual identity, but make it a new commercially viable design.",
       "No text, no logo, no collage, no layout board, no watermark.",
