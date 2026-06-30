@@ -186,6 +186,113 @@ function formatGenerationRules(rules) {
   return parts.join("\n\n");
 }
 
+function normalizeFeatureText(value) {
+  return String(value || "")
+    .replace(/^[^:：]*[:：]/, "")
+    .replace(/[（(]\d+[)）]/g, "")
+    .replace(/\s+/g, "")
+    .trim();
+}
+
+function splitFeatureText(value) {
+  return String(value || "")
+    .split(/[、,，\/|]/)
+    .map(normalizeFeatureText)
+    .filter(Boolean)
+    .filter(x => x !== "無" && x !== "未明顯命中");
+}
+
+function uniqueList(list) {
+  return [...new Set((list || []).map(normalizeFeatureText).filter(Boolean))];
+}
+
+function categoryFromText(value) {
+  const text = String(value || "");
+  if (/洋裝\+外件|洋裝加外件|內外套裝|上下套裝|兩件式套裝|成套|同布料套裝|同花色套裝/.test(text)) return "套裝";
+  if (/洋裝|長洋|短洋|連身裙/.test(text)) return "洋裝";
+  if (/裙子|短裙|長裙|褲裙|魚尾裙|蛋糕裙/.test(text)) return "裙子";
+  if (/褲子|長褲|短褲|寬褲|牛仔褲|喇叭褲/.test(text)) return "褲子";
+  if (/外套|罩衫|針織外套|皮外套/.test(text)) return "外套";
+  if (/上衣|背心|襯衫|針織上衣|BRA/.test(text)) return "上衣";
+  return "";
+}
+
+function parseFactorText(factorText) {
+  const map = new Map();
+  String(factorText || "").split(/\r?\n/).forEach(line => {
+    const match = line.match(/^(.+?)\s*熱銷[:：](.*?)；滯銷[:：](.*)$/);
+    if (!match) return;
+    const category = normalizeFeatureText(match[1]);
+    map.set(category, {
+      hot: splitFeatureText(match[2]),
+      slow: splitFeatureText(match[3])
+    });
+  });
+  return map;
+}
+
+function optimizeVariantForScore(variant, original, factorText) {
+  const factorMap = parseFactorText(factorText);
+  const category =
+    categoryFromText(`${variant.category || ""}${variant.middleCategory || ""}${variant.title || ""}`) ||
+    categoryFromText(`${original.category || ""}${original.middleCategory || ""}${original.title || ""}`) ||
+    variant.category ||
+    original.category ||
+    "上衣";
+  const factors = factorMap.get(category) || factorMap.get(variant.category) || factorMap.get(original.category) || { hot: [], slow: [] };
+  const slowSet = new Set((factors.slow || []).map(normalizeFeatureText));
+  const hotList = uniqueList(factors.hot || []);
+  const rawFeatures = uniqueList([...(variant.features || []), variant.middleCategory, variant.title]);
+  const removed = rawFeatures.filter(x => slowSet.has(normalizeFeatureText(x)));
+  const keptFeatures = rawFeatures.filter(x => !slowSet.has(normalizeFeatureText(x)));
+  const neededHot = hotList
+    .filter(x => !keptFeatures.includes(x))
+    .slice(0, Math.max(6, 10 - keptFeatures.length));
+  const optimizedFeatures = uniqueList([...keptFeatures, ...neededHot]).slice(0, 14);
+  const kept = uniqueList(variant.kept || []).filter(x => !slowSet.has(normalizeFeatureText(x)));
+  const added = uniqueList([...(variant.added || []), ...neededHot]);
+  const repairText = [
+    removed.length ? `移除/弱化低分滯銷元素：${removed.join("、")}` : "",
+    neededHot.length ? `補入同品類熱銷元素：${neededHot.join("、")}` : "",
+    `此方案必須以 ${category} 評分邏輯優化到 8 分以上`
+  ].filter(Boolean).join("；");
+
+  return {
+    ...variant,
+    category,
+    features: optimizedFeatures,
+    kept,
+    added,
+    reason: `${repairText}。${variant.reason || ""}`.trim(),
+    prompt: [
+      variant.prompt || "",
+      `Mandatory score repair: ${repairText}.`,
+      `Use these high-scoring visible design labels in the garment: ${optimizedFeatures.join(", ")}.`,
+      removed.length ? `Do not visibly preserve these low-scoring labels as main selling points: ${removed.join(", ")}.` : ""
+    ].filter(Boolean).join("\n")
+  };
+}
+
+function normalizeSetMislabel(variant) {
+  const text = `${variant.title || ""} ${variant.middleCategory || ""} ${(variant.features || []).join("、")} ${variant.prompt || ""}`;
+  const saysSet = /套裝|兩件式|上下套裝|內外套裝|洋裝\+外件|洋裝加外件/.test(text);
+  const trueSet = /洋裝\+外件|洋裝加外件|內外套裝|上下套裝|兩件式套裝|成套|同布料|同花色|同系列/.test(text);
+  const topBottomOnly = /上衣.+褲|褲.+上衣|短袖.+褲|襯衫.+褲|背心.+褲|針織.+褲/.test(text);
+  if ((variant.category === "套裝" || saysSet) && !trueSet && topBottomOnly) {
+    const fixedFeatures = uniqueList(variant.features || []).filter(x => !/套裝|兩件式|上下套裝/.test(x));
+    return {
+      ...variant,
+      category: "上衣",
+      middleCategory: variant.middleCategory && !/套裝/.test(variant.middleCategory) ? variant.middleCategory : "上衣延伸",
+      features: fixedFeatures,
+      added: uniqueList(variant.added || []).filter(x => !/套裝|兩件式|上下套裝/.test(x)),
+      reason: `此款僅為上下身搭配照，不是同系列成套設計，已改以「上衣」邏輯評分與生成。${variant.reason || ""}`,
+      prompt: `${variant.prompt || ""}\nThis is not a set unless the top and bottom are visibly designed as a matching same-fabric or same-pattern set. Do not label a random top-and-pants outfit as a set.`
+    };
+  }
+  return variant;
+}
+
 async function analyzeImage(payload) {
   const branchName = payload.branchName || "AS";
   const categories = Array.isArray(payload.categories) ? payload.categories : [];
@@ -256,7 +363,11 @@ features 必須列出實際能加分、且會畫在圖上的熱銷標籤；不�
     }
   ]);
 
-  const variants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, requestedCount) : [];
+  const variants = Array.isArray(parsed.variants)
+    ? parsed.variants
+        .slice(0, requestedCount)
+        .map(variant => optimizeVariantForScore(normalizeSetMislabel(variant), parsed.analysis || {}, factorText))
+    : [];
   return {
     analysis: parsed.analysis || {},
     variants
