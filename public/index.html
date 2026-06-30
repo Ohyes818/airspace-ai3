@@ -70,7 +70,7 @@
     .referenceGroup { border:1px solid #c8c2b4; border-radius:4px; background:#fffdf8; padding:14px; }
     .referenceTitle { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; color:#315c91; font-weight:900; }
     .referenceCard { display:grid; grid-template-columns:210px 1fr; gap:18px; border:2px solid #315c91; border-radius:4px; padding:14px; background:#eef4fb; margin-bottom:16px; }
-    .variantGrid { display:flex; gap:16px; align-items:stretch; overflow-x:auto; padding-bottom:8px; }
+    .variantGrid { display:grid; grid-template-columns:1fr; gap:18px; padding-bottom:8px; }
     .itemCard { display:grid; grid-template-columns:190px 1fr; gap:18px; border:1px solid var(--line); border-radius:4px; padding:14px; background:#fffdf8; }
     .thumb { width:190px; height:250px; object-fit:cover; border-radius:7px; background:#eef2f6; }
     .itemTop { display:flex; justify-content:space-between; gap:8px; align-items:start; }
@@ -89,6 +89,9 @@
     .scorePart.hot { border-left:4px solid var(--good); }
     .scorePart.slow { border-left:4px solid var(--bad); }
     .scorePart.neutral { border-left:4px solid #d0cfc6; }
+    .modelMemory { display:flex; align-items:center; gap:8px; margin-top:10px; color:#625d58; font-size:12px; }
+    .modelMemory input { display:none; }
+    .modelMemory label { border:1px solid #c8c2b4; border-radius:4px; padding:6px 10px; background:#fffdf8; cursor:pointer; color:#4a3618; }
     .refLine { border-left:3px solid var(--line); padding:5px 8px; background:#f4f1ea; border-radius:4px; font-size:12px; color:#625d58; }
     .refLine.hot { border-left-color:#968871; }
     .refLine.slow { border-left-color:#625d58; }
@@ -103,8 +106,14 @@
     .chatPic { width:132px; height:104px; border-radius:3px; background:linear-gradient(135deg,#e0dfdb,#fffdf8); border:1px solid #d0cfc6; object-fit:cover; display:grid; place-items:center; color:#625d58; font-size:12px; text-align:center; overflow:hidden; }
     .chatPic img { width:100%; height:100%; object-fit:cover; border-radius:3px; }
     .chatAsk { display:grid; grid-template-columns:1fr 92px 92px; gap:8px; }
-    .itemCard.generated .thumb { width:220px; height:300px; background:#eee9df; object-fit:cover; }
-    .itemCard.generated { grid-template-columns:220px 330px; min-width:590px; background:#fff1df; border:2px solid #315c91; }
+    .itemCard.generated .thumb { width:280px; height:390px; background:#eee9df; object-fit:cover; }
+    .itemCard.generated { grid-template-columns:280px minmax(0,1fr); width:100%; min-width:0; background:#fff1df; border:2px solid #315c91; }
+    .generatedBody { display:grid; grid-template-columns:minmax(330px,.95fr) minmax(420px,1.05fr); gap:16px; align-items:start; }
+    .generatedMain,.generatedDetail { min-width:0; }
+    .itemCard.generated .scoreBreakdown { grid-template-columns:repeat(2,minmax(170px,1fr)); }
+    .itemCard.generated .similarRefs { grid-template-columns:repeat(2,minmax(240px,1fr)); max-height:220px; overflow:auto; }
+    .itemCard.generated .small { max-width:none; }
+    @media (max-width:1300px) { .generatedBody { grid-template-columns:1fr; } .itemCard.generated .similarRefs { grid-template-columns:1fr; } }
     .extensionReason { margin:8px 0; padding:10px; border-left:4px solid var(--accent); background:#f4f1ea; color:#4d463d; line-height:1.6; }
     .empty { border:1px dashed var(--line); border-radius:4px; padding:28px; text-align:center; color:var(--muted); background:#fffdf8; }
     @media (max-width:1100px) { .app { grid-template-columns:1fr; } aside { position:static; } .uploadWorkspace,.uploadTools,.grid2,.catGrid { grid-template-columns:1fr; } .uploadPanel,.scoreGuide { grid-column:auto; grid-row:auto; position:static; } }
@@ -159,6 +168,11 @@
               <strong>上傳參考款式圖</strong>
               <div class="small">支援 JPG、PNG、WEBP。先分析參考圖，再依熱銷元素產生跨品類延伸款。</div>
               <input id="files" type="file" accept="image/*" multiple />
+              <div class="modelMemory">
+                <span id="modelStatus">數字人：尚未記住</span>
+                <label for="modelFile">更新數字人</label>
+                <input id="modelFile" type="file" accept="image/*" />
+              </div>
             </div>
               <div>
                 <label class="small"><b>改款延伸說明</b></label>
@@ -200,6 +214,8 @@
   </div>
   <script>
     let APP = {branches: [], images: {}};
+    let AS_GENERATION_RULES = null;
+    const DEFAULT_MODEL_URL = 'assets/model/as_digital_human.png';
     let activeBranch = null;
     let activeChannel = '總';
     const state = [];
@@ -378,6 +394,12 @@
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    }
+    async function urlToDataUrl(url) {
+      const res = await fetch(url, { cache:'no-store' });
+      if (!res.ok) throw new Error(`${url} 載入失敗`);
+      const blob = await res.blob();
+      return await fileToDataUrl(blob);
     }
     const CONFLICT_FEATURES = [
       ['窄管','闊腿','寬褲','寬版','寬鬆'],
@@ -894,14 +916,18 @@
       const added = isInDevelopment(item.uid);
       return `<article class="itemCard generated">
         <img class="thumb" src="${item.url}" alt="">
-        <div>
-          <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI 延伸款 ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI生成')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
-          <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
-          <div class="extensionReason"><b>保留：</b>${esc((item.kept || []).join('、') || '依參考款核心賣點')}<br><b>新增：</b>${esc((item.added || []).join('、') || '跨品類延伸')}<br><b>原因：</b>${esc(item.reason || item.summary || '')}</div>
-          ${scorePartHtml(s.aspectRows)}
-          <div class="small">${esc(s.notes)}</div>
-          <div class="similarRefs">${s.hotSimilar.map(x => refCard(x, 'hot')).join('')}${s.slowSimilar.map(x => refCard(x, 'slow')).join('')}</div>
-          <div class="decision"><b class="${s.decision[1]}">${s.decision[0]}</b><button class="secondary" type="button" onclick="addDevelopment('${esc(item.uid)}')">${added ? '已加入待開發' : '加入待開發'}</button></div>
+        <div class="generatedBody">
+          <div class="generatedMain">
+            <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI ??? ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI??')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
+            <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
+            <div class="extensionReason"><b>???</b>${esc((item.kept || []).join('?') || '???????')}<br><b>???</b>${esc((item.added || []).join('?') || '???????')}<br><b>???</b>${esc(item.reason || item.summary || '')}</div>
+            ${scorePartHtml(s.aspectRows)}
+            <div class="decision"><b class="${s.decision[1]}">${s.decision[0]}</b><button class="secondary" type="button" onclick="addDevelopment('${esc(item.uid)}')">${added ? '??????' : '?????'}</button></div>
+          </div>
+          <div class="generatedDetail">
+            <div class="small">${esc(s.notes)}</div>
+            <div class="similarRefs">${s.hotSimilar.map(x => refCard(x, 'hot')).join('')}${s.slowSimilar.map(x => refCard(x, 'slow')).join('')}</div>
+          </div>
         </div>
       </article>`;
     }
@@ -993,7 +1019,8 @@
               forcedCategory: overrideCategory,
               imageDataUrl: ref.dataUrl,
               modelDataUrl: modelReferenceDataUrl,
-              variantCount: references.length > 1 ? 1 : 3
+              generationRules: AS_GENERATION_RULES,
+              variantCount: 5
             })
           });
           const raw = await res.text();
@@ -1080,8 +1107,22 @@
     }
     async function initApp() {
       try {
+        if (!modelReferenceDataUrl) {
+          try {
+            modelReferenceDataUrl = await urlToDataUrl(DEFAULT_MODEL_URL);
+            if (els.modelStatus) els.modelStatus.textContent = '數字人：已套用網站預設';
+          } catch {
+            if (els.modelStatus) els.modelStatus.textContent = '數字人：尚未記住';
+          }
+        } else if (els.modelStatus) {
+          els.modelStatus.textContent = '數字人：已記住你的版本';
+        }
+        try {
+          const ruleRes = await fetch('data/as_generation_rules.json', { cache:'no-store' });
+          if (ruleRes.ok) AS_GENERATION_RULES = await ruleRes.json();
+        } catch {}
         if (els.modelStatus && modelReferenceDataUrl) {
-          els.modelStatus.textContent = '已記住你的 AS 數字人；若要更換，再重新選檔即可。';
+          els.modelStatus.textContent = els.modelStatus.textContent || '數字人：已套用';
         }
         const res = await fetch('data/app_data.json', {cache:'no-store'});
         if (!res.ok) throw new Error('data/app_data.json 載入失敗');

@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+﻿import fs from "node:fs/promises";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -131,8 +131,8 @@ async function editImage(prompt, productDataUrl, modelDataUrl) {
   form.append("size", process.env.OPENAI_IMAGE_SIZE || "1024x1024");
   const productBlob = dataUrlToBlob(productDataUrl);
   const modelBlob = dataUrlToBlob(modelDataUrl);
-  if (productBlob) form.append("image", productBlob, "product-reference.png");
   if (modelBlob) form.append("image", modelBlob, "as-digital-human-reference.png");
+  if (productBlob) form.append("image", productBlob, "product-reference.png");
 
   const response = await fetch("https://api.openai.com/v1/images/edits", {
     method: "POST",
@@ -169,27 +169,43 @@ async function generateImage(prompt) {
   throw new Error("OpenAI 沒有回傳圖片。");
 }
 
+function formatGenerationRules(rules) {
+  if (!rules || typeof rules !== "object") return "";
+  const parts = [];
+  if (rules.defaultModel?.description) parts.push(`預設數字人：${rules.defaultModel.description}`);
+  if (rules.explicitRules) parts.push(rules.explicitRules);
+  if (rules.branchIntroDocxText) parts.push(`AS支線介紹：\n${String(rules.branchIntroDocxText).slice(0, 5000)}`);
+  if (rules.coreLogicPdfText) parts.push(`AS核心設計邏輯：\n${String(rules.coreLogicPdfText).slice(0, 3000)}`);
+  return parts.join("\n\n");
+}
+
 async function analyzeImage(payload) {
   const branchName = payload.branchName || "AS";
   const categories = Array.isArray(payload.categories) ? payload.categories : [];
   const factorText = payload.factorText || "";
   const note = payload.note || "";
   const forcedCategory = payload.forcedCategory || "";
+  const requestedCount = Math.max(1, Math.min(5, Number(payload.variantCount || 5)));
+  const generationRuleText = formatGenerationRules(payload.generationRules);
   const prompt = `
 你是 AIR SPACE 商品企劃與服裝設計分析助手。
 目前支線：${branchName}
 可用大品類：${categories.join("、")}
 使用者補充說明：${note || "無"}
 使用者指定品類：${forcedCategory || "無"}
+AS支線核心邏輯與風格定位：
+${generationRuleText || "無"}
+
 目前暢滯銷標籤摘要：
 ${factorText || "無"}
 
 ${extensionRules}
 
-請依圖片先判斷原商品，再提出 ${Number(payload.variantCount || 3)} 款最值得生成的改款延伸。
-每款優先跨品類延伸，但不得失去原商品高分賣點。
+請依圖片先判斷原商品，再提出 ${requestedCount} 款最值得生成的改款延伸。
+每款優先跨品類延伸，但不得失去原商品高分賣點。除非使用者明確要求只做同品類，否則 ${requestedCount} 款中至少 3 款要是跨品類延伸。
 每款 title、category、middleCategory 必須與生成 prompt 完全一致。例如 category 是洋裝，prompt 必須描述一件完整洋裝，不可只生成上衣或背心；category 是外套，必須是外套；category 是褲子，必須是褲裝。
 如果「使用者指定品類」不是無，analysis.category 必須等於該指定品類，且延伸方向也必須從該品類出發，不可自行改判成套裝或其他品類。
+若原圖或品名有明顯設計，例如前車線、綁帶、鏤空、蕾絲、透膚、百褶、開衩、魚尾、荷葉、牛仔、高腰、顯瘦，且列在 kept 或 features，生成 prompt 必須具體描述該元素出現在服裝哪個位置，不能只寫文字不畫出來。
 
 只回傳 JSON，不要 Markdown。格式：
 {
@@ -225,8 +241,7 @@ ${extensionRules}
     }
   ]);
 
-  const count = Math.max(1, Math.min(3, Number(payload.variantCount || 3)));
-  const variants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, count) : [];
+  const variants = Array.isArray(parsed.variants) ? parsed.variants.slice(0, requestedCount) : [];
   return {
     analysis: parsed.analysis || {},
     variants
@@ -236,17 +251,21 @@ ${extensionRules}
 async function extendStyle(payload) {
   const analyzed = await analyzeImage(payload);
   const original = analyzed.analysis || {};
+  const generationRuleText = formatGenerationRules(payload.generationRules);
   const variants = [];
   for (const [index, variant] of analyzed.variants.entries()) {
     const imagePrompt = [
       "Create a clean ecommerce fashion product photo of one full-body female AS digital human model wearing the new AIR SPACE derived style.",
-      "Model direction: use a consistent virtual model similar to a blonde western fashion fitting model, fair skin, slim 170cm proportion, clean modern commercial look, inspired by Hailey Rhode Bieber's minimal beauty direction but do not imitate or recreate any real person.",
-      payload.modelDataUrl ? "Use the uploaded AS digital human reference image as the primary model identity reference. Keep the same virtual model face direction, hair color, body proportion, clean fitting-model temperament, and studio catalog feeling." : "",
+      payload.modelDataUrl
+        ? "MANDATORY MODEL REFERENCE: use the uploaded AS digital human reference image as the primary model identity reference. Preserve the same virtual face structure, blonde hair color and hairstyle, fair skin tone, slim 170cm 47kg body proportion, D-cup bust proportion, fitting-model posture, and clean AIR SPACE catalog temperament. Do not invent a different model. If garment and model references conflict, prioritize keeping the AS digital human model identity."
+        : "Model direction: use a consistent virtual blonde western fashion fitting model, fair skin, slim 170cm 47kg proportion, D-cup bust proportion, clean modern commercial look. Do not imitate or recreate any real person.",
       "Use the uploaded product image as the garment design reference. Preserve the high scoring garment elements, silhouette, material feeling, and core details before extending into the new category.",
       "The generated garment must exactly match the variant category and title. If the variant says dress, show a complete one-piece dress from shoulder to hem. If it says top, show a top. If it says outerwear, show outerwear. Do not output a cropped top when the title/category says dress.",
+      "If the variant keeps a visual detail such as front seam lines, lace-up ties, cutout, lace, sheer fabric, pleats, slit, fishtail, ruffles, denim wash, high waist, or slimming seams, that detail must be visibly present in the generated image at the correct garment location.",
       "Show the complete garment clearly, full body, not a close-up crop. Keep the full hem, sleeve, neckline, waist and silhouette visible.",
       "Use a plain white or warm off-white studio background, full-body front pose, natural standing posture, clear garment details, premium online shop catalog lighting.",
       "Keep the original product's strongest selling points and visual identity, but make it a new commercially viable design.",
+      `AS branch design rules and positioning: ${generationRuleText || "Use AIR SPACE AS sweet-sexy, body-flattering, clean ecommerce styling."}`,
       "No text, no logo, no collage, no layout board, no watermark.",
       `Original analysis: ${JSON.stringify(original)}`,
       `Variant ${index + 1}: ${JSON.stringify(variant)}`,
@@ -299,3 +318,4 @@ http.createServer((req, res) => {
 }).listen(port, "0.0.0.0", () => {
   console.log(`AIR SPACE style extension app running on port ${port}`);
 });
+
