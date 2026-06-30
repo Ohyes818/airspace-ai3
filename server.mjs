@@ -25,7 +25,7 @@ AI 高評分改款延伸規則：
 2. 改款時必須保留所有高分熱銷標籤、熱銷版型、熱銷細節與商品核心賣點，不得失去商品辨識度。
 3. 依品類延伸：
 上衣：不同領型、不同袖型、不同細節設計、上衣、洋裝+外件套裝、連身褲、內外套裝、上下套裝。
-套裝／上身內外套裝：不同領型、不同袖型、不同細節設計、上衣、洋裝+外件套裝。
+套裝／上身內外套裝：不同領型、不同袖型、不同細節設計、上衣、洋裝+外件套裝。若原圖或使用者文字判定為套裝／上身內外套裝，必須優先依照此順序延伸，不可先跳到褲子或不相關品類；至少要有一款上衣延伸、一款洋裝+外件套裝延伸。
 短褲：連身褲、長裙、短裙、長褲、褲裙、上下套裝。
 長褲：連身褲、長裙、短裙、短褲、褲裙、上下套裝。
 短裙／褲裙：洋裝、長裙、長褲、短褲、其他短裙、上下套裝。
@@ -211,6 +211,10 @@ ${extensionRules}
 請依圖片先判斷原商品，再提出 ${requestedCount} 款最值得生成的改款延伸。
 每款延伸都必須以本系統評分 8 分以上為硬性目標。若初始方向可能低於 8 分，不要放棄生成，而是保留原商品設計重點後，主動加入更高權重的熱銷標籤、修正版型/領型/材質/細節，改到預估 8 分以上再輸出。
 不要回覆「低於 8 分所以不做」。你必須給出已優化後的改款方案。
+輸出 variants 前必須先自評：若任何方案預估低於 8 分，請直接改寫該方案的 category、middleCategory、features、kept、added、reason、prompt，直到預估 8 分以上。不要把低分草案放進 JSON。
+原圖元素若在目前摘要中偏滯銷，不可盲目保留；只能保留真正構成辨識度的核心賣點，其他扣分元素要替換成同品類或跨品類更熱銷的相近元素。例如 V領、過短、弱勢材質或弱勢圖案造成扣分時，請改成更高分的領型/版型/細節，但 reason 必須說明「改掉低分元素」。
+features 必須列出實際能加分、且會畫在圖上的熱銷標籤；不要列入沒有畫出來、沒有保留、或已被替換掉的元素。
+若原商品是套裝／上身內外套裝，${requestedCount} 款方案中必須優先包含：不同領型、不同袖型、不同細節設計、上衣、洋裝+外件套裝；不得只產生一款，也不得全部集中在同一個延伸方向。
 每款優先跨品類延伸，但不得失去原商品高分賣點。除非使用者明確要求只做同品類，否則 ${requestedCount} 款中至少 3 款要是跨品類延伸。
 每款 title、category、middleCategory 必須與生成 prompt 完全一致。例如 category 是洋裝，prompt 必須描述一件完整洋裝，不可只生成上衣或背心；category 是外套，必須是外套；category 是褲子，必須是褲裝。
 如果「使用者指定品類」不是無，analysis.category 必須等於該指定品類，且延伸方向也必須從該品類出發，不可自行改判成套裝或其他品類。
@@ -279,6 +283,9 @@ async function extendStyle(payload) {
       "Use a plain white or warm off-white studio background, full-body front pose, natural standing posture, clear garment details, premium online shop catalog lighting.",
       "Keep the original product's strongest selling points and visual identity, but make it a new commercially viable design.",
       "Target score requirement is mandatory: the design should be likely to score 8/10 or higher in the AIR SPACE scoring system. Avoid slow-selling features and weak category mismatches.",
+      "If an original feature is likely to reduce the score according to the hot/slow tag context, do not preserve it literally. Replace it with a visually related higher-scoring alternative while keeping the product identity. For example, if V-neck or another neckline is a slow-selling factor, convert it to a higher-scoring neckline or styling instead of keeping it.",
+      "For set or inner-outer set extensions, follow the required priority: neckline variation, sleeve variation, detail variation, top, dress plus outer layer set. Do not generate unrelated pants-only ideas first.",
+      "The final generated image must represent an optimized 8+ design, not a low-score draft.",
       `AS branch design rules and positioning: ${generationRuleText || "Use AIR SPACE AS sweet-sexy, body-flattering, clean ecommerce styling."}`,
       "No text, no logo, no collage, no layout board, no watermark.",
       `Original analysis: ${JSON.stringify(original)}`,
