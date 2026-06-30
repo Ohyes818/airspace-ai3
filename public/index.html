@@ -113,6 +113,7 @@
     .itemCard.generated .scoreBreakdown { grid-template-columns:repeat(2,minmax(170px,1fr)); }
     .itemCard.generated .similarRefs { grid-template-columns:repeat(2,minmax(240px,1fr)); max-height:220px; overflow:auto; }
     .itemCard.generated .small { max-width:none; }
+    .thumbMissing { width:280px; height:390px; border-radius:7px; border:1px dashed var(--line); display:grid; place-items:center; text-align:center; color:var(--muted); background:#f4f1ea; padding:14px; }
     @media (max-width:1300px) { .generatedBody { grid-template-columns:1fr; } .itemCard.generated .similarRefs { grid-template-columns:1fr; } }
     .extensionReason { margin:8px 0; padding:10px; border-left:4px solid var(--accent); background:#f4f1ea; color:#4d463d; line-height:1.6; }
     .empty { border:1px dashed var(--line); border-radius:4px; padding:28px; text-align:center; color:var(--muted); background:#fffdf8; }
@@ -240,7 +241,10 @@
       chatBtn: document.getElementById('chatBtn'),
       chatResetBtn: document.getElementById('chatResetBtn')
     };
-    function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function cleanText(v) {
+      return String(v ?? '').replace(/[�]+/g, '').replace(/\?{2,}/g, '').trim();
+    }
+    function esc(v) { return cleanText(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function chip(row, type) { return `<span class="chip ${type}">${esc(row.feature)} <b>${row.count ?? row.hot_count ?? row.slow_count ?? ''}</b></span>`; }
     function validFeatureName(feature) {
       const text = String(feature || '').trim();
@@ -283,11 +287,11 @@
         const hotRows = rows => rows
           .filter(r => validFeatureName(r.feature) && Number(r.hot_count || 0) > Number(r.slow_count || 0) && Number(r.hot_count || 0) > 0)
           .sort((a,b) => Number(b.hot_count || 0) - Number(a.hot_count || 0))
-          .slice(0,14);
+          .slice(0,40);
         const slowRows = rows => rows
           .filter(r => validFeatureName(r.feature) && Number(r.slow_count || 0) > Number(r.hot_count || 0) && Number(r.slow_count || 0) > 0)
           .sort((a,b) => Number(b.slow_count || 0) - Number(a.slow_count || 0))
-          .slice(0,14);
+          .slice(0,40);
         branch.categoryCardsByChannel = {};
         branch.overviewHotByChannel = {};
         branch.overviewSlowByChannel = {};
@@ -915,7 +919,7 @@
       const s = scoreItem(item);
       const added = isInDevelopment(item.uid);
       return `<article class="itemCard generated">
-        <img class="thumb" src="${item.url}" alt="">
+        ${item.url ? `<img class="thumb" src="${item.url}" alt="">` : `<div class="thumbMissing">圖片生成失敗<br>${esc(item.imageError || '請重新生成')}</div>`}
         <div class="generatedBody">
           <div class="generatedMain">
             <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI ??? ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI??')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
@@ -1039,11 +1043,11 @@
               uid:`gen_${ref.uid}_${idx}_${Date.now()}`,
               parentId:ref.uid,
               kind:'generated', name:v.title || `延伸款 ${idx+1}`, title:v.title || `延伸款 ${idx+1}`,
-              url:v.imageDataUrl || ref.url, dataUrl:v.imageDataUrl || ref.dataUrl, code:'',
+              url:v.imageDataUrl || '', dataUrl:v.imageDataUrl || '', code:'',
               category: activeBranch.categories.includes(v.category) ? v.category : (v.category || ref.category || '上衣'),
               middleCategory:v.middleCategory || '',
               features:normalizeFeatureList(v.features || []), summary:v.summary || v.reason || '',
-              kept:v.kept || [], added:v.added || [], reason:v.reason || v.imageError || '', source:v.imageDataUrl ? 'AI生成' : '生成失敗使用參考圖', analyzed:true
+              kept:v.kept || [], added:v.added || [], reason:v.reason || v.imageError || '', imageError:v.imageError || '', source:v.imageDataUrl ? 'AI生成' : '生成失敗', analyzed:true
             });
           });
         } catch(err) {

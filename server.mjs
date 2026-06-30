@@ -202,6 +202,7 @@ ${factorText || "無"}
 ${extensionRules}
 
 請依圖片先判斷原商品，再提出 ${requestedCount} 款最值得生成的改款延伸。
+每款延伸都必須以本系統評分 8 分以上為目標；如果某個方向可能低於 8 分，請改選更符合熱銷標籤、避開滯銷標籤的方向。
 每款優先跨品類延伸，但不得失去原商品高分賣點。除非使用者明確要求只做同品類，否則 ${requestedCount} 款中至少 3 款要是跨品類延伸。
 每款 title、category、middleCategory 必須與生成 prompt 完全一致。例如 category 是洋裝，prompt 必須描述一件完整洋裝，不可只生成上衣或背心；category 是外套，必須是外套；category 是褲子，必須是褲裝。
 如果「使用者指定品類」不是無，analysis.category 必須等於該指定品類，且延伸方向也必須從該品類出發，不可自行改判成套裝或其他品類。
@@ -265,6 +266,7 @@ async function extendStyle(payload) {
       "Show the complete garment clearly, full body, not a close-up crop. Keep the full hem, sleeve, neckline, waist and silhouette visible.",
       "Use a plain white or warm off-white studio background, full-body front pose, natural standing posture, clear garment details, premium online shop catalog lighting.",
       "Keep the original product's strongest selling points and visual identity, but make it a new commercially viable design.",
+      "Target score requirement: the design should be likely to score 8/10 or higher in the AIR SPACE scoring system. Avoid slow-selling features and weak category mismatches.",
       `AS branch design rules and positioning: ${generationRuleText || "Use AIR SPACE AS sweet-sexy, body-flattering, clean ecommerce styling."}`,
       "No text, no logo, no collage, no layout board, no watermark.",
       `Original analysis: ${JSON.stringify(original)}`,
