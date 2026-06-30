@@ -45,6 +45,7 @@
     .chip { display:inline-flex; gap:5px; align-items:center; border-radius:4px; padding:7px 9px; font-size:13px; background:#e0dfdb; color:#46381f; }
     .chip.hot { background:var(--hot); color:var(--hotText); }
     .chip.slow { background:var(--slow); color:var(--slowText); }
+    .showMoreBtn { background:#fffdf8; color:var(--nav2); border:1px solid var(--line); border-radius:4px; padding:7px 10px; font-size:13px; }
     .catGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
     .catHead { display:flex; justify-content:space-between; align-items:start; gap:12px; margin-bottom:10px; }
     .catHead h3 { font-size:20px; }
@@ -222,6 +223,8 @@
     const state = [];
     let modelReferenceDataUrl = localStorage.getItem('airspace_ai3_model_reference') || '';
     const developmentList = JSON.parse(localStorage.getItem('airspace_ai3_development_list') || '[]');
+    const LABEL_PREVIEW_LIMIT = 40;
+    const labelExpanded = new Set();
     const chatMemory = { lastRows: [], lastQuestion: '', lastMode: '', lastScope: '全部支線' };
     const els = {
       branches: document.getElementById('branches'),
@@ -246,6 +249,25 @@
     }
     function esc(v) { return cleanText(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function chip(row, type) { return `<span class="chip ${type}">${esc(row.feature)} <b>${row.count ?? row.hot_count ?? row.slow_count ?? ''}</b></span>`; }
+    function labelToggleKey(scope, type) {
+      return `${activeBranch?.name || ''}|${activeChannel}|${scope}|${type}`;
+    }
+    window.toggleLabels = function(key) {
+      if (labelExpanded.has(key)) labelExpanded.delete(key);
+      else labelExpanded.add(key);
+      renderFactors();
+    };
+    function renderLabelChips(rows, type, key) {
+      const list = Array.isArray(rows) ? rows : [];
+      if (!list.length) return '<span class="small">暫無資料</span>';
+      const expanded = labelExpanded.has(key);
+      const visible = expanded ? list : list.slice(0, LABEL_PREVIEW_LIMIT);
+      const chips = visible.map(r => chip(r, type)).join('');
+      if (list.length <= LABEL_PREVIEW_LIMIT) return chips;
+      const safeKey = encodeURIComponent(key);
+      const label = expanded ? '收合' : `顯示更多 +${list.length - LABEL_PREVIEW_LIMIT}`;
+      return `${chips}<button class="showMoreBtn" type="button" onclick="toggleLabels(decodeURIComponent('${safeKey}'))">${label}</button>`;
+    }
     function validFeatureName(feature) {
       const text = String(feature || '').trim();
       return text && !text.includes('?') && !text.includes('�');
@@ -286,12 +308,10 @@
         });
         const hotRows = rows => rows
           .filter(r => validFeatureName(r.feature) && Number(r.hot_count || 0) > Number(r.slow_count || 0) && Number(r.hot_count || 0) > 0)
-          .sort((a,b) => Number(b.hot_count || 0) - Number(a.hot_count || 0))
-          .slice(0,40);
+          .sort((a,b) => Number(b.hot_count || 0) - Number(a.hot_count || 0));
         const slowRows = rows => rows
           .filter(r => validFeatureName(r.feature) && Number(r.slow_count || 0) > Number(r.hot_count || 0) && Number(r.slow_count || 0) > 0)
-          .sort((a,b) => Number(b.slow_count || 0) - Number(a.slow_count || 0))
-          .slice(0,40);
+          .sort((a,b) => Number(b.slow_count || 0) - Number(a.slow_count || 0));
         branch.categoryCardsByChannel = {};
         branch.overviewHotByChannel = {};
         branch.overviewSlowByChannel = {};
@@ -342,8 +362,9 @@
       const slow = selected === '全部品類'
         ? (activeBranch.overviewSlowByChannel?.[activeChannel] || activeBranch.overviewSlow || [])
         : (cards[0]?.slowFactors || []).map(r => ({ feature:r.feature, count:r.slow_count }));
-      els.overallHot.innerHTML = hot.map(r => chip(r, 'hot')).join('') || '<span class="small">暫無資料</span>';
-      els.overallSlow.innerHTML = slow.map(r => chip(r, 'slow')).join('') || '<span class="small">暫無資料</span>';
+      const scope = selected === '全部品類' ? '總覽' : selected;
+      els.overallHot.innerHTML = renderLabelChips(hot, 'hot', labelToggleKey(`overall:${scope}`, 'hot'));
+      els.overallSlow.innerHTML = renderLabelChips(slow, 'slow', labelToggleKey(`overall:${scope}`, 'slow'));
       els.categoryCards.innerHTML = cards.map(c => `
         <article class="catCard">
           <div class="catHead">
@@ -351,8 +372,8 @@
             <div class="small">熱銷 ${c.hotLabels}<br>滯銷 ${c.slowLabels}</div>
           </div>
           <div class="labelCols">
-            <div><div class="subhead">熱銷標籤</div><div class="chips">${c.hotFactors.map(r => `<span class="chip hot">${esc(r.feature)} ${r.hot_count}</span>`).join('') || '<span class="small">暫無</span>'}</div></div>
-            <div><div class="subhead">滯銷標籤</div><div class="chips">${c.slowFactors.map(r => `<span class="chip slow">${esc(r.feature)} ${r.slow_count}</span>`).join('') || '<span class="small">暫無</span>'}</div></div>
+            <div><div class="subhead">熱銷標籤</div><div class="chips">${renderLabelChips(c.hotFactors, 'hot', labelToggleKey(`card:${c.category}`, 'hot'))}</div></div>
+            <div><div class="subhead">滯銷標籤</div><div class="chips">${renderLabelChips(c.slowFactors, 'slow', labelToggleKey(`card:${c.category}`, 'slow'))}</div></div>
           </div>
         </article>`).join('');
     }

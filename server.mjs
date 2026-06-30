@@ -131,8 +131,14 @@ async function editImage(prompt, productDataUrl, modelDataUrl) {
   form.append("size", process.env.OPENAI_IMAGE_SIZE || "1024x1024");
   const productBlob = dataUrlToBlob(productDataUrl);
   const modelBlob = dataUrlToBlob(modelDataUrl);
-  if (modelBlob) form.append("image", modelBlob, "as-digital-human-reference.png");
-  if (productBlob) form.append("image", productBlob, "product-reference.png");
+  if (modelBlob && productBlob) {
+    form.append("image[]", modelBlob, "as-digital-human-reference.png");
+    form.append("image[]", productBlob, "product-reference.png");
+  } else if (modelBlob) {
+    form.append("image", modelBlob, "as-digital-human-reference.png");
+  } else if (productBlob) {
+    form.append("image", productBlob, "product-reference.png");
+  }
 
   const response = await fetch("https://api.openai.com/v1/images/edits", {
     method: "POST",
