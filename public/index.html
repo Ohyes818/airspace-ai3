@@ -245,7 +245,7 @@
       chatResetBtn: document.getElementById('chatResetBtn')
     };
     function cleanText(v) {
-      return String(v ?? '').replace(/[�]+/g, '').replace(/\?{2,}/g, '').trim();
+      return String(v ?? '').replace(/[�]+/g, '').replace(/\?{2,}/g, '').replace(/\s{2,}/g, ' ').trim();
     }
     function esc(v) { return cleanText(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function chip(row, type) { return `<span class="chip ${type}">${esc(row.feature)} <b>${row.count ?? row.hot_count ?? row.slow_count ?? ''}</b></span>`; }
@@ -943,11 +943,11 @@
         ${item.url ? `<img class="thumb" src="${item.url}" alt="">` : `<div class="thumbMissing">圖片生成失敗<br>${esc(item.imageError || '請重新生成')}</div>`}
         <div class="generatedBody">
           <div class="generatedMain">
-            <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI ??? ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI??')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
+            <div class="itemTop"><div><b>${esc(item.title || item.name)}</b><div class="small">AI 延伸款 ${esc(item.category)}${item.middleCategory ? ' / ' + esc(item.middleCategory) : ''} / ${esc(item.source || 'AI生成')}</div></div><div class="score ${s.decision[1] === 'good' ? 'good' : s.decision[1] === 'watch' ? 'warn' : ''}">${s.score}</div></div>
             <div class="tags">${(item.features || []).map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>
-            <div class="extensionReason"><b>???</b>${esc((item.kept || []).join('?') || '???????')}<br><b>???</b>${esc((item.added || []).join('?') || '???????')}<br><b>???</b>${esc(item.reason || item.summary || '')}</div>
+            <div class="extensionReason"><b>保留：</b>${esc((item.kept || []).join('、') || '未明確標示')}<br><b>新增：</b>${esc((item.added || []).join('、') || '未明確標示')}<br><b>原因：</b>${esc(item.reason || item.summary || '')}</div>
             ${scorePartHtml(s.aspectRows)}
-            <div class="decision"><b class="${s.decision[1]}">${s.decision[0]}</b><button class="secondary" type="button" onclick="addDevelopment('${esc(item.uid)}')">${added ? '??????' : '?????'}</button></div>
+            <div class="decision"><b class="${s.decision[1]}">${s.score < 8 ? '未達8分' : s.decision[0]}</b><button class="secondary" type="button" onclick="addDevelopment('${esc(item.uid)}')">${added ? '已加入待開發' : '加入待開發'}</button></div>
           </div>
           <div class="generatedDetail">
             <div class="small">${esc(s.notes)}</div>
@@ -957,8 +957,13 @@
       </article>`;
     }
     function renderReferenceGroup(ref, generatedItems) {
+      const qualifiedItems = generatedItems.filter(item => item.imageError || scoreItem(item).score >= 8);
+      const rejectedCount = generatedItems.length - qualifiedItems.length;
+      const emptyText = generatedItems.length
+        ? `本次有 ${rejectedCount} 款未達 8 分，已自動剔除。請調整說明後重新生成。`
+        : '此款尚未產生延伸款。';
       return `<section class="referenceGroup">
-        <div class="referenceTitle"><span>原始款式與延伸結果</span><span class="small">${generatedItems.length ? `${generatedItems.length} 款延伸` : '等待生成'}</span></div>
+        <div class="referenceTitle"><span>原始款式與延伸結果</span><span class="small">${qualifiedItems.length ? `${qualifiedItems.length} 款達 8 分延伸` : '等待生成'}${rejectedCount ? `，已剔除 ${rejectedCount} 款低分方案` : ''}</span></div>
         <article class="referenceCard">
           <img class="thumb" src="${ref.url}" alt="">
           <div>
@@ -967,7 +972,7 @@
             <div class="small">${esc(ref.summary || '按生成延伸款式後，AI 會先分析這張圖，再產生延伸款。')}</div>
           </div>
         </article>
-        <div class="variantGrid">${generatedItems.length ? generatedItems.map(renderGeneratedCard).join('') : '<div class="empty">此款尚未產生延伸款。</div>'}</div>
+        <div class="variantGrid">${qualifiedItems.length ? qualifiedItems.map(renderGeneratedCard).join('') : `<div class="empty">${emptyText}</div>`}</div>
       </section>`;
     }
     function renderResults() {

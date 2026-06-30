@@ -208,11 +208,13 @@ ${factorText || "無"}
 ${extensionRules}
 
 請依圖片先判斷原商品，再提出 ${requestedCount} 款最值得生成的改款延伸。
-每款延伸都必須以本系統評分 8 分以上為目標；如果某個方向可能低於 8 分，請改選更符合熱銷標籤、避開滯銷標籤的方向。
+每款延伸都必須以本系統評分 8 分以上為硬性門檻；不要輸出預估低於 8 分的方案。如果某個方向可能低於 8 分，請改選更符合熱銷標籤、避開滯銷標籤的方向。
 每款優先跨品類延伸，但不得失去原商品高分賣點。除非使用者明確要求只做同品類，否則 ${requestedCount} 款中至少 3 款要是跨品類延伸。
 每款 title、category、middleCategory 必須與生成 prompt 完全一致。例如 category 是洋裝，prompt 必須描述一件完整洋裝，不可只生成上衣或背心；category 是外套，必須是外套；category 是褲子，必須是褲裝。
 如果「使用者指定品類」不是無，analysis.category 必須等於該指定品類，且延伸方向也必須從該品類出發，不可自行改判成套裝或其他品類。
 若原圖或品名有明顯設計，例如前車線、綁帶、鏤空、蕾絲、透膚、百褶、開衩、魚尾、荷葉、牛仔、高腰、顯瘦，且列在 kept 或 features，生成 prompt 必須具體描述該元素出現在服裝哪個位置，不能只寫文字不畫出來。
+特別注意：「前車線」不是普通素面褲，必須描述為褲子正面從腰頭往下延伸的可見縱向車線/拼接線/壓線，左右腿正面都要清楚可見。
+搭配請參考 AIR SPACE 官網商品照精神：乾淨、顯比例、微甜微性感、實穿但有設計點；避免醜搭配、厚重混搭、廉價感、奇怪配件、過度前衛或非 AIR SPACE 風格。
 
 只回傳 JSON，不要 Markdown。格式：
 {
@@ -269,10 +271,12 @@ async function extendStyle(payload) {
       "Use the uploaded product image as the garment design reference. Preserve the high scoring garment elements, silhouette, material feeling, and core details before extending into the new category.",
       "The generated garment must exactly match the variant category and title. If the variant says dress, show a complete one-piece dress from shoulder to hem. If it says top, show a top. If it says outerwear, show outerwear. Do not output a cropped top when the title/category says dress.",
       "If the variant keeps a visual detail such as front seam lines, lace-up ties, cutout, lace, sheer fabric, pleats, slit, fishtail, ruffles, denim wash, high waist, or slimming seams, that detail must be visibly present in the generated image at the correct garment location.",
+      "When preserving front seam lines on pants or denim, render clear vertical seam/panel lines on the front of both legs from waistband toward hem. Do not replace them with a plain smooth pant front.",
       "Show the complete garment clearly, full body, not a close-up crop. Keep the full hem, sleeve, neckline, waist and silhouette visible.",
+      "Styling direction must feel like AIR SPACE online store product styling: clean modern Taiwanese ecommerce fashion, flattering body proportion, sweet-sexy but wearable, minimal accessories, neat hair, no awkward layering, no random streetwear pieces, no heavy or ugly outfit matching.",
       "Use a plain white or warm off-white studio background, full-body front pose, natural standing posture, clear garment details, premium online shop catalog lighting.",
       "Keep the original product's strongest selling points and visual identity, but make it a new commercially viable design.",
-      "Target score requirement: the design should be likely to score 8/10 or higher in the AIR SPACE scoring system. Avoid slow-selling features and weak category mismatches.",
+      "Target score requirement is mandatory: the design should be likely to score 8/10 or higher in the AIR SPACE scoring system. Avoid slow-selling features and weak category mismatches.",
       `AS branch design rules and positioning: ${generationRuleText || "Use AIR SPACE AS sweet-sexy, body-flattering, clean ecommerce styling."}`,
       "No text, no logo, no collage, no layout board, no watermark.",
       `Original analysis: ${JSON.stringify(original)}`,
